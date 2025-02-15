@@ -24,6 +24,7 @@ public class Vehicle {
     private Date vehiculemMintenanceDate;
     private Boolean vehiculeInsuranceStatus;
     private Date vehiculeInsuranceDate;
+
     @OneToOne (mappedBy = "vehicle")
     private Driver driver;
 

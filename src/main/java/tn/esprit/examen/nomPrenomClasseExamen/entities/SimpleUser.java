@@ -50,5 +50,10 @@ public class SimpleUser extends User{
     @OneToMany(mappedBy = "simpleUser", orphanRemoval = true)
     private Set<Chat> chats = new LinkedHashSet<>();
 
+    @OneToMany(mappedBy = "simpleUser")  // Correct mapping
+    private Set<Trip> trips;
+
+
+
 }
 

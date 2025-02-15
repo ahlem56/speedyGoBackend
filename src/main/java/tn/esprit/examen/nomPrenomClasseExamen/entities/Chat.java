@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.Set;
+
 @Entity
 @Getter
 @Setter
@@ -24,5 +26,8 @@ public class Chat {
     @ManyToOne
     @JoinColumn(name = "driver_user_id")
     private Driver driver;
+
+    @OneToMany(mappedBy = "chat")
+    private Set<MessageChat> messageChats;
 
 }

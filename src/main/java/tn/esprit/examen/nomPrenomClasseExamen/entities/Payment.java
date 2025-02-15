@@ -24,6 +24,6 @@ public class Payment {
     @OneToOne
     private Parcel parcel;
     @OneToOne(mappedBy = "payment")
-    private Reservation reservation;
+    private Trip trip;
 }
 
