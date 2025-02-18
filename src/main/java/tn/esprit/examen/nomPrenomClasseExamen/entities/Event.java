@@ -23,7 +23,10 @@ public class Event {
     private String eventDescription;
     private String eventLocation;
 
-    @ManyToMany(mappedBy = "events")
-    private Set<SimpleUser> simpleUsers = new LinkedHashSet<>();
-
+    @ManyToMany
+    @JoinTable(
+            name = "user_event",
+            joinColumns = @JoinColumn(name = "event_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id"))
+    private Set<SimpleUser> simpleUsers;
 }

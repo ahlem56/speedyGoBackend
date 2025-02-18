@@ -26,14 +26,21 @@ public class Trip {
     private Integer tripDuration;
     private Float tripPrice;
     private TripType tripType;
+    private ReservationStatus reservationStatus;
 
     @ManyToOne
     @JoinColumn(name = "driver_user_id")
     private Driver driver;
-    @OneToOne
-    private Reservation reservation;
 
-    @OneToMany(mappedBy = "trip", orphanRemoval = true)
+
+    @OneToMany(mappedBy = "trip", orphanRemoval = true, cascade = CascadeType.ALL)
     private Set<Rules> ruleses = new LinkedHashSet<>();
 
+    @OneToOne
+    @JoinColumn(name = "payment_id")  // Association avec Payment
+    private Payment payment;
+
+    @ManyToOne
+    @JoinColumn(name = "simple_user_id")
+    private SimpleUser simpleUser;  // The association with SimpleUser
 }

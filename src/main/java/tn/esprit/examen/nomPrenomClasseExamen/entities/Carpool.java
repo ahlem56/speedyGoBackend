@@ -25,8 +25,7 @@ public class Carpool {
     private String carpoolCondition ;
     private Float carpoolPrice;
 
-    @OneToOne
-    private Offer offer;
+
 
     @ManyToOne
     @JoinColumn(name = "simple_user_user_id")

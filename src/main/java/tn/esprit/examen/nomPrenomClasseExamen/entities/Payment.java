@@ -18,12 +18,14 @@ public class Payment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer payementId;
     private Date paymentDate;
+    @Enumerated(EnumType.STRING)
     private PaymentMethod paymentMethod;
     private Float paymentAmount;
-
     @OneToOne
     private Parcel parcel;
+
     @OneToOne(mappedBy = "payment")
-    private Reservation reservation;
+    private Trip trip;
+
 }
 
