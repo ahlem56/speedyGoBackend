@@ -35,5 +35,7 @@ public class Driver extends User {
     @OneToOne
     private Vehicle vehicle;
 
+    public void setId(Integer driverId) {
+    }
 }
 

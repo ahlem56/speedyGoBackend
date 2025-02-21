@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.*;
 import tn.esprit.examen.nomPrenomClasseExamen.SpringSecurity.ApiResponse;
 import tn.esprit.examen.nomPrenomClasseExamen.SpringSecurity.JwtResponse;
 import tn.esprit.examen.nomPrenomClasseExamen.SpringSecurity.JwtUtil;
+import tn.esprit.examen.nomPrenomClasseExamen.entities.Admin;
+import tn.esprit.examen.nomPrenomClasseExamen.entities.Driver;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.SimpleUser;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.User;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.SimpleUserRepository;
@@ -54,25 +56,60 @@ public class UserController {
 
 
     // Sign in
+//    @PostMapping("/signin")
+//    public ResponseEntity<JwtResponse> signIn(@RequestBody SimpleUser simpleUser) {
+//        // Find the SimpleUser by email
+//        SimpleUser user = simpleUserRepository.findByUserEmail(simpleUser.getUserEmail());
+//        if (user == null) {
+//            throw new UsernameNotFoundException("User not found");
+//        }
+//
+//        // Compare the raw password with the encoded password
+//        if (!passwordEncoder.matches(simpleUser.getUserPassword(), user.getUserPassword())) {
+//            throw new BadCredentialsException("Invalid credentials");
+//        }
+//
+//        // Generate JWT token
+//        String token = jwtUtil.generateToken(user.getUserEmail());
+//
+//        // Return token wrapped in JwtResponse (in JSON format)
+//        return ResponseEntity.ok(new JwtResponse("Bearer " + token));  // Return the token in a JSON object
+//    }
     @PostMapping("/signin")
     public ResponseEntity<JwtResponse> signIn(@RequestBody SimpleUser simpleUser) {
-        // Find the SimpleUser by email
-        SimpleUser user = simpleUserRepository.findByUserEmail(simpleUser.getUserEmail());
-        if (user == null) {
+      // Récupérer l'utilisateur par email
+      User user = userRepository.findByUserEmail(simpleUser.getUserEmail());
+              if (user == null) {
             throw new UsernameNotFoundException("User not found");
         }
 
-        // Compare the raw password with the encoded password
-        if (!passwordEncoder.matches(simpleUser.getUserPassword(), user.getUserPassword())) {
-            throw new BadCredentialsException("Invalid credentials");
-        }
 
-        // Generate JWT token
-        String token = jwtUtil.generateToken(user.getUserEmail());
+      // Vérifier le mot de passe
+      if (!passwordEncoder.matches(simpleUser.getUserPassword(), user.getUserPassword())) {
+        throw new BadCredentialsException("Invalid credentials");
+      }
 
-        // Return token wrapped in JwtResponse (in JSON format)
-        return ResponseEntity.ok(new JwtResponse("Bearer " + token));  // Return the token in a JSON object
+      // Déterminer dynamiquement la sous-classe de l'utilisateur
+      String role = getRoleFromUser(user);
+
+      // Générer le token avec le rôle
+      String token = jwtUtil.generateToken(user.getUserEmail(), role);
+
+      // Retourner le token et le rôle
+      return ResponseEntity.ok(new JwtResponse("Bearer " + token, role));
     }
+
+  // Méthode pour détecter la sous-classe de l'utilisateur
+  private String getRoleFromUser(User user) {
+    if (user instanceof Admin) {
+      return "Admin";
+    } else if (user instanceof Driver) {
+      return "Driver";
+    } else if (user instanceof SimpleUser) {
+      return "SimpleUser";
+    }
+    return "Unknown";
+  }
 
 
 }

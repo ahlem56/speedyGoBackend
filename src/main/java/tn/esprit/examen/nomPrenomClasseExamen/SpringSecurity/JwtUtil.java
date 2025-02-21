@@ -13,33 +13,42 @@ import java.util.Date;
 @Component
 public class JwtUtil {
     private SecretKey secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS256); // Secure key for HS256
+  // 🔹 Générer un token avec le rôle
+  public String generateToken(String username, String role) {
+    return Jwts.builder()
+      .setSubject(username)
+      .claim("role", role) // Ajout du rôle dans le token
+      .setIssuedAt(new Date())
+      .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // 10 heures
+      .signWith(secretKey, SignatureAlgorithm.HS256)
+      .compact();
+  }
 
-    public String generateToken(String username) {
-        return Jwts.builder()
-                .setSubject(username)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // 10 hours
-                .signWith(SignatureAlgorithm.HS256, secretKey)
-                .compact();
-    }
+  // 🔹 Extraire les claims du token
+  public Claims extractClaims(String token) {
+    JwtParser parser = Jwts.parser()  // Use the older parser method
+      .setSigningKey(secretKey)  // Set the signing key
+      .build();  // Build the parser
+    return parser.parseClaimsJws(token).getBody();  // Parse the claims from the token
+  }
 
-    public Claims extractClaims(String token) {
-        // Use the JwtParserBuilder to parse the JWT
-        JwtParser parser = Jwts.parser()
-                .setSigningKey(secretKey) // Set the signing key
-                .build();  // Build the parser
-        return parser.parseClaimsJws(token).getBody();  // Parse the claims from the token
-    }
+  // 🔹 Extraire l'email de l'utilisateur
+  public String extractUsername(String token) {
+    return extractClaims(token).getSubject();
+  }
 
-    public String extractUsername(String token) {
-        return extractClaims(token).getSubject();
-    }
+  // 🔹 Extraire le rôle de l'utilisateur
+  public String extractRole(String token) {
+    return extractClaims(token).get("role", String.class);
+  }
 
-    public boolean isTokenExpired(String token) {
-        return extractClaims(token).getExpiration().before(new Date());
-    }
+  // 🔹 Vérifier si le token est expiré
+  public boolean isTokenExpired(String token) {
+    return extractClaims(token).getExpiration().before(new Date());
+  }
 
-    public boolean validateToken(String token, String username) {
-        return (username.equals(extractUsername(token)) && !isTokenExpired(token));
-    }
+  // 🔹 Valider le token
+  public boolean validateToken(String token, String username) {
+    return (username.equals(extractUsername(token)) && !isTokenExpired(token));
+  }
 }

@@ -1,9 +1,11 @@
 package tn.esprit.examen.nomPrenomClasseExamen.services;
 
 import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.Admin;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.Driver;
@@ -12,8 +14,8 @@ import tn.esprit.examen.nomPrenomClasseExamen.repositories.UserRepository;
 @AllArgsConstructor
 @Service
 public class UserService implements IUserService, org.springframework.security.core.userdetails.UserDetailsService {
-
-    private final UserRepository userRepository;
+@Autowired
+    private  UserRepository userRepository;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -37,6 +39,5 @@ public class UserService implements IUserService, org.springframework.security.c
                 .roles(role)
                 .build();
     }
-
 
 }
