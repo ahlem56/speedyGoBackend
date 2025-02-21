@@ -96,7 +96,11 @@ public class UserController {
       String token = jwtUtil.generateToken(user.getUserEmail(), role);
 
       // Retourner le token et le rôle
-      return ResponseEntity.ok(new JwtResponse("Bearer " + token, role));
+        JwtResponse response = new JwtResponse("Bearer " + token, role);
+        response.setUser(user);  // Add the user object to the response
+        return ResponseEntity.ok(response);
+
+
     }
 
   // Méthode pour détecter la sous-classe de l'utilisateur

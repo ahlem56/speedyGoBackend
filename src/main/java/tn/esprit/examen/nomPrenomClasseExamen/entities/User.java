@@ -1,5 +1,6 @@
 package tn.esprit.examen.nomPrenomClasseExamen.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -14,6 +15,7 @@ import java.util.Date;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "chats", "notifications", "trips", "parcels"})
 @Inheritance (strategy  = InheritanceType.JOINED)
 public abstract class  User {
     @Id
