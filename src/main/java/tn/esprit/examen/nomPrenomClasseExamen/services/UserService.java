@@ -40,4 +40,24 @@ public class UserService implements IUserService, org.springframework.security.c
                 .build();
     }
 
+
+/*
+    // Implementing the method to update the user's profile photo
+    public void updateProfilePhoto(String username, String fileName) {
+        // Retrieve the user from the database
+        tn.esprit.examen.nomPrenomClasseExamen.entities.User user = userRepository.findByUserEmail(username);
+
+        if (user == null) {
+            throw new UsernameNotFoundException("User not found");
+        }
+
+        // Update the user's profile photo field
+        user.setUserProfilePhoto(fileName);
+
+        // Save the updated user object in the database
+        userRepository.save(user);
+    }
+
+
+ */
 }

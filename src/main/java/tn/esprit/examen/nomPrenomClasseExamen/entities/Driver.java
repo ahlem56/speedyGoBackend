@@ -20,6 +20,7 @@ public class Driver extends User {
     private String insuranceDetailsD;
     private Float performanceRatingD;
     private String scheduleD;
+    private boolean availibilityD;
 
     @OneToMany(mappedBy = "driver", orphanRemoval = true)
     private Set<Chat> chats = new LinkedHashSet<>();

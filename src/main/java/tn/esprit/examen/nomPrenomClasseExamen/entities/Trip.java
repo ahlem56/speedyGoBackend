@@ -26,7 +26,8 @@ public class Trip {
     private Integer tripDuration;
     private Float tripPrice;
     private TripType tripType;
-    private ReservationStatus reservationStatus;
+    @Enumerated(EnumType.STRING)
+    private ReservationStatus reservationStatus = ReservationStatus.PENDING;
 
     @ManyToOne
     @JoinColumn(name = "driver_user_id")

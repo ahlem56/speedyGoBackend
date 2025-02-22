@@ -20,23 +20,33 @@ public class DriverController {
   public Driver createDriver(@RequestBody Driver driver) {
     return driverService.createDriver(driver);
   }
+
   @GetMapping("/get-all-drivers")
   public List<Driver> getAllDrivers() {
     return driverService.getAllDrivers();
   }
+
   @GetMapping("/find-driver/{id}")
   public Optional<Driver> getDriverById(@PathVariable("id") Integer id) {
     return driverService.getDriverById(id);
   }
+
   @PutMapping("/update/{id}")
   public Driver updateDriver(
     @PathVariable("id") Integer id,
     @RequestBody Driver driverDetails) {
     return driverService.updateDriver(id, driverDetails);
   }
+
   @DeleteMapping("/delete/{id}")
   public void deleteDriver(@PathVariable("id") Integer id) {
     driverService.deleteDriver(id);
+  }
+
+
+  @GetMapping("/get-available-drivers")
+  public List<Driver> getAvailableDrivers() {
+    return driverService.getAvailableDrivers();
   }
 
 }

@@ -11,4 +11,5 @@ public interface IDriverService {
   void deleteDriver(Integer driverId);
   Optional<Driver> getDriverById(Integer driverId);//Optional permet de gérer le cas où un Driver n'est pas trouvé dans la base de données.
   List<Driver> getAllDrivers();
-}
+  public List<Driver> getAvailableDrivers();
+  }

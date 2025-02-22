@@ -47,4 +47,12 @@ public class DriverService implements IDriverService {
   public List<Driver> getAllDrivers() {
     return driverRepository.findAll();
   }
+
+  @Override
+  public List<Driver> getAvailableDrivers() {
+    return driverRepository.findByavailibilityDTrue();
+  }
+
+
+
 }

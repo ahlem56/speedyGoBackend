@@ -7,11 +7,14 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.web.multipart.MultipartFile;
 import tn.esprit.examen.nomPrenomClasseExamen.SpringSecurity.ApiResponse;
 import tn.esprit.examen.nomPrenomClasseExamen.SpringSecurity.JwtResponse;
 import tn.esprit.examen.nomPrenomClasseExamen.SpringSecurity.JwtUtil;
@@ -21,6 +24,12 @@ import tn.esprit.examen.nomPrenomClasseExamen.entities.SimpleUser;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.User;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.SimpleUserRepository;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.UserRepository;
+import tn.esprit.examen.nomPrenomClasseExamen.services.UserService;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 @AllArgsConstructor
 @RequestMapping("/user")
@@ -32,6 +41,7 @@ public class UserController {
     private final PasswordEncoder passwordEncoder;
     private JwtUtil jwtUtil;
     private UserRepository userRepository;
+    private UserService userService;
 
     @CrossOrigin(origins = "http://localhost:4200")
     @PostMapping("/signup")
@@ -114,6 +124,27 @@ public class UserController {
     }
     return "Unknown";
   }
+
+
+    /*@PostMapping("/upload-profile-photo")
+    public ResponseEntity<String> uploadProfilePhoto(@RequestParam("profilePhoto") MultipartFile file, @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            String fileName = saveFile(file);  // Save the file to a directory or cloud storage
+            // Update the user's profile photo in the database
+            userService.updateProfilePhoto(userDetails.getUsername(), fileName); // Update the user's profile photo in the DB
+            return ResponseEntity.ok("File uploaded successfully: " + fileName);
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error uploading file: " + e.getMessage());
+        }
+    }
+
+    private String saveFile(MultipartFile file) throws IOException {
+        String fileName = file.getOriginalFilename();
+        Path path = Paths.get("uploads/" + fileName);
+        Files.write(path, file.getBytes());
+        return fileName;  // Returning the file name to update the user's profile photo
+    }
+*/
 
 
 }

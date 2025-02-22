@@ -27,11 +27,15 @@ public class TripService implements ITripService{
         Driver driver = driverRepository.findById(driverId)
                 .orElseThrow(() -> new RuntimeException("Driver not found"));
 
-        trip.setSimpleUser(simpleUser);  // Affectation du SimpleUser
-        trip.setDriver(driver);          // Affectation du Driver
+        trip.setSimpleUser(simpleUser);  // Assigning the SimpleUser
+        trip.setDriver(driver);          // Assigning the Driver
+
+        // Optionally set up payment if required
+        // trip.setPayment(somePaymentObject);
 
         return tripRepository.save(trip);
     }
+
 
     @Override
     public Trip updateTrip(Integer tripId, Trip updatedTrip) {
