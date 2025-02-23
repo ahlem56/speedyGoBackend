@@ -12,17 +12,27 @@ import java.util.List;
 @RequestMapping("/parcel")
 @RestController
 public class ParcelController {
-  //projet hedha y5dim fih bil les roles 
+  //projet hedha y5dim fih bil les roles
   @Autowired
   private IParcelService parcelService;
   // Create a new parcel and assign it to a driver and a user
   //http://localhost:8089/examen/parcel/createParcel/4/5
-  @PostMapping("/createParcel/{userId}/{driverId}")
-  public Parcel createParcelWithAssignment(
-    @RequestBody Parcel parcel,
-    @PathVariable("userId") Integer userId,
-    @PathVariable("driverId") Integer driverId) {
-    return parcelService.createParcelWithAssignment(parcel, driverId, userId);
+//  @PostMapping("/createParcel/{userId}/{driverId}")
+//  public Parcel createParcelWithAssignment(
+//    @RequestBody Parcel parcel,
+//    @PathVariable("userId") Integer userId,
+//    @PathVariable("driverId") Integer driverId) {
+//    return parcelService.createParcelWithAssignment(parcel, driverId, userId);
+//  }
+  @PostMapping("/createParcel/{userId}")
+  public Parcel createParcel(@RequestBody Parcel parcel, @PathVariable Integer userId) {
+    return parcelService.createParcel(parcel, userId);
+  }
+
+  // 2️⃣ Affectation d’un colis existant à un Driver (par l'admin)
+  @PutMapping("/assign/{parcelId}/{driverId}")
+  public Parcel assignParcelToDriver(@PathVariable Integer parcelId, @PathVariable Integer driverId) {
+    return parcelService.assignParcelToDriver(parcelId, driverId);
   }
 
   // Get a list of all parcels
