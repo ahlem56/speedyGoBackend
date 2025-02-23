@@ -35,31 +35,52 @@ public class ChatController {
 //   headerAccessor.getSessionAttributes().put("username",messageChat.getSender());
 //return messageChat;
 //}
+
   private SimpMessagingTemplate messagingTemplate;
   private  MessageChatRepository messageChatRepository;
   private  ChatRepository chatRepository;
   @MessageMapping("/send")
   @SendTo("/topic/messages")
-  public MessageChat sendMessage(MessageChat message) {
+  public MessageChat sendMessage(@Payload MessageChat message) {
     Optional<Chat> chat = chatRepository.findById(message.getChat().getChatId());
-
     if (chat.isPresent()) {
-      MessageChat msg = new MessageChat();
-      msg.setMessageChatContent(message.getMessageChatContent());
-      msg.setMessageChatDateCreation(new Date());
-      msg.setMessageChatStatus(false);
-      msg.setChat(chat.get());
-
-      messageChatRepository.save(msg);
+      message.setMessageChatDateCreation(new Date());
+      message.setMessageChatStatus(false);
+      message.setChat(chat.get());
+      MessageChat savedMessage = messageChatRepository.save(message);
+      messagingTemplate.convertAndSend("/topic/messages", savedMessage);
+      return savedMessage;
     }
-
-    return message;
+    return null;
   }
 
   @GetMapping("/{chatId}")
   public Iterable<MessageChat> getChatHistory(@PathVariable Integer chatId) {
     return messageChatRepository.findByChatChatId(chatId);
   }
+
+//  @MessageMapping("/send")
+//  @SendTo("/topic/messages")
+//  public MessageChat sendMessage(MessageChat message) {
+//    Optional<Chat> chat = chatRepository.findById(message.getChat().getChatId());
+//
+//    if (chat.isPresent()) {
+//      MessageChat msg = new MessageChat();
+//      msg.setMessageChatContent(message.getMessageChatContent());
+//      msg.setMessageChatDateCreation(new Date());
+//      msg.setMessageChatStatus(false);
+//      msg.setChat(chat.get());
+//
+//      messageChatRepository.save(msg);
+//    }
+//
+//    return message;
+//  }
+//
+//  @GetMapping("/{chatId}")
+//  public Iterable<MessageChat> getChatHistory(@PathVariable Integer chatId) {
+//    return messageChatRepository.findByChatChatId(chatId);
+//  }
 
 
 }
