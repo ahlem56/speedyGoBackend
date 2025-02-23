@@ -35,8 +35,9 @@ public class SimpleUser extends User{
     private Partners partners;
 
     @ManyToOne
-    @JoinColumn(name = "subscription_subscription_id")
+    @JoinColumn(name = "subscription_subscription_id") // This links SimpleUser to Subscription
     private Subscription subscription;
+
 
     @OneToMany(mappedBy = "simpleUser", orphanRemoval = true)
     private Set<Complaints> complaintses = new LinkedHashSet<>();

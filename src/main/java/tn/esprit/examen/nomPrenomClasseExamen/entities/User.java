@@ -36,5 +36,8 @@ public abstract class  User {
     private Integer userCin;
     @JsonProperty("birthDate")
     private Date userBirthDate;
+    @Column(name = "reset_token")
+    private String resetToken;
+
 
 }

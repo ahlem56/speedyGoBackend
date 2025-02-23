@@ -11,6 +11,8 @@ import tn.esprit.examen.nomPrenomClasseExamen.repositories.DriverRepository;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.SimpleUserRepository;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.TripRepository;
 
+import java.util.List;
+
 @Slf4j
 @AllArgsConstructor
 @Service
@@ -53,5 +55,11 @@ public class TripService implements ITripService{
     @Override
     public Trip getTripById(Integer tripId) {
         return tripRepository.findById(tripId).orElseThrow(() -> new RuntimeException("Trip not found"));
+    }
+
+    public List<Trip> getTripsForUser(Integer userId) {
+        SimpleUser user = simpleUserRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return tripRepository.findBySimpleUser(user);
     }
 }

@@ -8,6 +8,8 @@ import tn.esprit.examen.nomPrenomClasseExamen.entities.ReservationStatus;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.Trip;
 import tn.esprit.examen.nomPrenomClasseExamen.services.TripService;
 
+import java.util.List;
+
 @Slf4j
 @AllArgsConstructor
 @RequestMapping("/trip")
@@ -40,4 +42,13 @@ public class TripController {
     public Trip getTripById(@PathVariable Integer tripId) {
         return tripService.getTripById(tripId);
     }
+
+    // Get all trips for a user
+    @GetMapping("/getTripsForUser/{userId}")
+    public List<Trip> getTripsForUser(@PathVariable Integer userId) {
+        return tripService.getTripsForUser(userId);
+    }
+
+
+
 }

@@ -3,6 +3,8 @@ package tn.esprit.examen.nomPrenomClasseExamen.controllers;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -30,6 +32,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
+import java.util.UUID;
 
 @AllArgsConstructor
 @RequestMapping("/user")
@@ -42,6 +46,8 @@ public class UserController {
     private JwtUtil jwtUtil;
     private UserRepository userRepository;
     private UserService userService;
+    private JavaMailSender mailSender;  // Injection du mailSender ici
+
 
     @CrossOrigin(origins = "http://localhost:4200")
     @PostMapping("/signup")
@@ -124,6 +130,54 @@ public class UserController {
     }
     return "Unknown";
   }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<String> forgotPassword(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        User user = userRepository.findByUserEmail(email);
+
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+        }
+
+        // Generate a unique token for password reset
+        String resetToken = UUID.randomUUID().toString();
+
+        // Save the reset token in the database (You should also implement this part in your database)
+        user.setResetToken(resetToken);
+        userRepository.save(user);
+
+        // Send password reset email
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(email);
+        message.setSubject("Password Reset Request");
+        message.setText("To reset your password, click the link below:\n" +
+                "http://localhost:4200/reset-password?token=" + resetToken);
+
+        mailSender.send(message);
+
+        return ResponseEntity.ok("Password reset email sent");
+    }
+
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(@RequestBody Map<String, String> request) {
+        String token = request.get("token");
+        String newPassword = request.get("newPassword");
+
+        // Find the user by reset token
+        User user = userRepository.findByResetToken(token);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid token");
+        }
+
+        // Encode the new password before saving
+        user.setUserPassword(passwordEncoder.encode(newPassword));
+        user.setResetToken(null);  // Clear the reset token after successful reset
+        userRepository.save(user);
+
+        return ResponseEntity.ok("Password successfully reset");
+    }
 
 
     /*@PostMapping("/upload-profile-photo")

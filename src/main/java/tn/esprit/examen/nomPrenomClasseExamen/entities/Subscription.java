@@ -18,6 +18,7 @@ public class Subscription {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer SubscriptionId;
+    @Enumerated(EnumType.STRING)
     private SubscriptionType subscriptionType;
     private Float subscriptionPrice;
     private String subscriptionDescription;
