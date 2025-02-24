@@ -7,7 +7,6 @@ import tn.esprit.examen.nomPrenomClasseExamen.entities.Parcel;
 import tn.esprit.examen.nomPrenomClasseExamen.services.IParcelService;
 
 import java.util.List;
-
 @AllArgsConstructor
 @RequestMapping("/parcel")
 @RestController
