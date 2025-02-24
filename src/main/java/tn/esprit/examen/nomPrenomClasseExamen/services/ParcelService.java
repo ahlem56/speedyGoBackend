@@ -100,7 +100,10 @@ public class ParcelService implements IParcelService {
     parcel.setSimpleUser(parcelDetails.getSimpleUser());
     return parcelRepository.save(parcel);
   }
-
+//pour recuperer les parcels by driver
+  public List<Parcel> getParcelsByDriver(Long driverId) {
+    return parcelRepository.findByDriver_Id(driverId);
+  }
   @Override
   public void deleteParcel(Integer id) {
     Parcel parcel = getParcelById(id);

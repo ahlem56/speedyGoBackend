@@ -54,6 +54,11 @@ public class ParcelController {
     @RequestBody Parcel parcelDetails) {
     return parcelService.updateParcel(id, parcelDetails);
   }
+  //Recover all the parcels by Driver Id
+  @GetMapping("/driver/{driverId}")
+  public List<Parcel> getParcelsByDriver(@PathVariable Long driverId) {
+    return parcelService.getParcelsByDriver(driverId);
+  }
 
   // Delete a parcel by its ID
   @DeleteMapping("/delete/{id}")

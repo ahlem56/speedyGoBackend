@@ -13,5 +13,6 @@ public interface IParcelService {
   Parcel getParcelById(Integer id);
   List<Parcel> getAllParcels();
   Parcel updateParcel(Integer id, Parcel parcelDetails);
-  void deleteParcel(Integer id);
+   List<Parcel> getParcelsByDriver(Long driverId) ;
+    void deleteParcel(Integer id);
 }
