@@ -8,4 +8,6 @@ import java.util.List;
 
 public interface TripRepository extends JpaRepository<Trip, Integer> {
     List<Trip> findBySimpleUser(SimpleUser user);
+
+    List<Trip> findByDriver_UserId(Integer userId);
 }

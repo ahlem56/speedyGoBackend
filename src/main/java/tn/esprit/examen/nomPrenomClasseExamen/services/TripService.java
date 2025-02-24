@@ -62,4 +62,19 @@ public class TripService implements ITripService{
                 .orElseThrow(() -> new RuntimeException("User not found"));
         return tripRepository.findBySimpleUser(user);
     }
+
+
+    public List<Trip> getAllTrips() {
+        return tripRepository.findAll();  // This should fetch all trips from the DB
+    }
+
+    // New method to get trips for a specific driver
+    public List<Trip> getTripsForDriver(Integer userId) {
+        log.info("Fetching trips for driver with userId: {}", userId);  // Log the userId
+        List<Trip> trips = tripRepository.findByDriver_UserId(userId);  // Use userId in the query
+        log.info("Trips fetched: {}", trips);  // Log the trips list
+        return trips;
+    }
+
+
 }

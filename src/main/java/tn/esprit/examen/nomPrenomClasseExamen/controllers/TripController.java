@@ -49,6 +49,15 @@ public class TripController {
         return tripService.getTripsForUser(userId);
     }
 
+    @GetMapping("/getAllTrips")
+    public List<Trip> getAllTrips() {
+        return tripService.getAllTrips();
+    }
+
+    @GetMapping("/getTripsForDriver/{driverId}")
+    public List<Trip> getTripsForDriver(@PathVariable Integer driverId) {
+        return tripService.getTripsForDriver(driverId);
+    }
 
 
 }
