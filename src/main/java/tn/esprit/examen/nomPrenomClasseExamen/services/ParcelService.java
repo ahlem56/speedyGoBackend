@@ -30,23 +30,52 @@ public class ParcelService implements IParcelService {
 //    }
 
   @Override
-  public Parcel createParcelWithAssignment(Parcel parcel, Integer driverId, Integer userId) {
-    // Check if the SimpleUser exists
+  public Parcel createParcel(Parcel parcel, Integer userId) {
+    // Vérifier si le SimpleUser existe
     SimpleUser user = simpleUserRepository.findById(userId)
       .orElseThrow(() -> new RuntimeException("SimpleUser not found with id: " + userId));
 
-    // Check if the Driver exists
+    // Associer le colis à l'utilisateur
+    parcel.setSimpleUser(user);
+    parcel.setParcelDate(new Date()); // Définir la date de création
+
+    return parcelRepository.save(parcel);
+  }
+
+
+  @Override
+  public Parcel assignParcelToDriver(Integer parcelId, Integer driverId) {
+// Vérifier si le colis existe
+    Parcel parcel = parcelRepository.findById(parcelId)
+      .orElseThrow(() -> new RuntimeException("Parcel not found with id: " + parcelId));
+
+    // Vérifier si le Driver existe
     Driver driver = driverRepository.findById(driverId)
       .orElseThrow(() -> new RuntimeException("Driver not found with id: " + driverId));
 
-    // Set the associations
-    parcel.setSimpleUser(user);//affectation to a user
-    parcel.setDriver(driver); //affectation to a driver
-    parcel.setParcelDate(new Date());  // Set the current date for the parcel
+    // Affecter le chauffeur au colis
+    parcel.setDriver(driver);
 
-    // Save the parcel and return the saved entity
-    return parcelRepository.save(parcel);
-  }
+    return parcelRepository.save(parcel);  }
+
+  //  @Override
+//  public Parcel createParcelWithAssignment(Parcel parcel, Integer driverId, Integer userId) {
+//    // Check if the SimpleUser exists
+//    SimpleUser user = simpleUserRepository.findById(userId)
+//      .orElseThrow(() -> new RuntimeException("SimpleUser not found with id: " + userId));
+//
+//    // Check if the Driver exists
+//    Driver driver = driverRepository.findById(driverId)
+//      .orElseThrow(() -> new RuntimeException("Driver not found with id: " + driverId));
+//
+//    // Set the associations
+//    parcel.setSimpleUser(user);//affectation to a user
+//    parcel.setDriver(driver); //affectation to a driver
+//    parcel.setParcelDate(new Date());  // Set the current date for the parcel
+//
+//    // Save the parcel and return the saved entity
+//    return parcelRepository.save(parcel);
+//  }
   @Override
   public Parcel getParcelById(Integer id) {
     return parcelRepository.findById(id).orElseThrow(() -> new RuntimeException("Parcel not found"));
@@ -71,7 +100,10 @@ public class ParcelService implements IParcelService {
     parcel.setSimpleUser(parcelDetails.getSimpleUser());
     return parcelRepository.save(parcel);
   }
-
+//pour recuperer les parcels by driver
+  public List<Parcel> getParcelsByDriver(Long driverId) {
+    return parcelRepository.findByDriver_Id(driverId);
+  }
   @Override
   public void deleteParcel(Integer id) {
     Parcel parcel = getParcelById(id);
