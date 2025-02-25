@@ -31,6 +31,7 @@ public class DriverController {
     return driverService.getDriverById(id);
   }
 
+
   @PutMapping("/update/{id}")
   public Driver updateDriver(
     @PathVariable("id") Integer id,

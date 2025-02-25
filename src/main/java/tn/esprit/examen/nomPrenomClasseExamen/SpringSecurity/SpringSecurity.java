@@ -42,8 +42,9 @@ public class SpringSecurity {
                 .and()
                 .csrf().disable()  // Disable CSRF for API use
                 .authorizeRequests()
-                .requestMatchers("/user/signup", "/user/signin", "/public/**" ,"/trip/**","/driver/**","/Admin/**","/parcel/**").permitAll()// Allow these endpoints to be publicly accessible
+                .requestMatchers("/user/signup", "/user/signin", "/public/**" ,"/trip/**","/driver/**","/Admin/**","/parcel/**","/vehicle/**").permitAll()// Allow these endpoints to be publicly accessible
                 .anyRequest().authenticated()  // All other requests require authentication
+               //.anyRequest().permitAll()
                 .and()
                 .formLogin().disable()  // Disable Spring Security's default form login
                 .httpBasic();  // Optionally enable HTTP Basic authentication

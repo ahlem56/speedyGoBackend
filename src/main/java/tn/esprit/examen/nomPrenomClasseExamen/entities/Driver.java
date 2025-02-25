@@ -1,5 +1,6 @@
 package tn.esprit.examen.nomPrenomClasseExamen.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -34,6 +35,7 @@ public class Driver extends User {
     @OneToMany(mappedBy = "driver", orphanRemoval = true)
     private Set<Parcel> parcels = new LinkedHashSet<>();
     @OneToOne
+    @JsonBackReference
     private Vehicle vehicle;
 
     public void setId(Integer driverId) {
