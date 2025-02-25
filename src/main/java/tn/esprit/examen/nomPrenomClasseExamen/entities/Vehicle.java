@@ -1,10 +1,13 @@
 package tn.esprit.examen.nomPrenomClasseExamen.entities;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.util.Date;
 
@@ -17,16 +20,18 @@ public class Vehicle {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer vehiculeId;
+    @Enumerated(EnumType.STRING)
     private VehicleType vehicleType;
     private String vehicleModel;
     private Integer vehicleCapacity;
     private Integer vehicleSerialNumber;
-    private Date vehiculemMintenanceDate;
+    private Date vehiculeMaintenanceDate;
     private Boolean vehiculeInsuranceStatus;
     private Date vehiculeInsuranceDate;
 
-    @OneToOne (mappedBy = "vehicle")
+    @OneToOne (mappedBy = "vehicle" , cascade = CascadeType.ALL)
+    @JsonManagedReference
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Driver driver;
-
 
 }
