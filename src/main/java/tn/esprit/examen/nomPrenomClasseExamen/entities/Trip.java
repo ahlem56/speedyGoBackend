@@ -1,6 +1,8 @@
 package tn.esprit.examen.nomPrenomClasseExamen.entities;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,11 +22,16 @@ public class Trip {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer tripId;
+    @NotNull
     private String tripDeparture;
+    @NotNull
     private String tripDestination;
+    @NotNull
+    @Future(message = "Trip date must be in the future") // Ensure the trip is not scheduled in the past
     private Date tripDate;
     private Integer tripDuration;
     private Float tripPrice;
+    @NotNull
     private TripType tripType;
     @Enumerated(EnumType.STRING)
     private ReservationStatus reservationStatus = ReservationStatus.PENDING;

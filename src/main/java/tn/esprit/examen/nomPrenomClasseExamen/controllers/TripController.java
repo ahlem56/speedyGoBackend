@@ -1,5 +1,6 @@
 package tn.esprit.examen.nomPrenomClasseExamen.controllers;
 
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +21,7 @@ public class TripController {
     private TripService tripService;
 
     @PostMapping("/createTrip/{simpleUserId}/{driverId}")
-    public Trip createTrip(@RequestBody Trip trip, @PathVariable Integer simpleUserId, @PathVariable Integer driverId, @RequestHeader("Authorization") String authorization) {
+    public Trip createTrip(@Valid @RequestBody Trip trip, @PathVariable Integer simpleUserId, @PathVariable Integer driverId, @RequestHeader("Authorization") String authorization) {
         if (trip.getReservationStatus() == null) {
             trip.setReservationStatus(ReservationStatus.PENDING);
         }

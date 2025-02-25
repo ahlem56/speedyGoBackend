@@ -34,6 +34,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @AllArgsConstructor
 @RequestMapping("/user")
@@ -52,8 +54,32 @@ public class UserController {
     @CrossOrigin(origins = "http://localhost:4200")
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@RequestBody SimpleUser simpleUser) {
+        // Validate password is not empty
         if (simpleUser.getUserPassword() == null || simpleUser.getUserPassword().isEmpty()) {
             return new ResponseEntity<>("Password cannot be empty", HttpStatus.BAD_REQUEST);
+        }
+
+        if (simpleUser.getUserPassword().length() < 6) {
+            return new ResponseEntity<>("Password must be at least 6 characters", HttpStatus.BAD_REQUEST);
+        }
+        if (simpleUser.getUserFirstName() == null || simpleUser.getUserFirstName().isEmpty()) {
+            return new ResponseEntity<>("First Name is required", HttpStatus.BAD_REQUEST);
+        }
+
+        if (simpleUser.getUserLastName() == null || simpleUser.getUserLastName().isEmpty()) {
+            return new ResponseEntity<>("Last Name is required", HttpStatus.BAD_REQUEST);
+        }
+
+        if (simpleUser.getUserCin() == null || simpleUser.getUserCin() <= 0) {
+            return new ResponseEntity<>("CIN must be a valid positive number", HttpStatus.BAD_REQUEST);
+        }
+
+        // Validate email format
+        String emailRegex = "^[A-Za-z0-9+_.-]+@(.+)$";
+        Pattern pattern = Pattern.compile(emailRegex);
+        Matcher matcher = pattern.matcher(simpleUser.getUserEmail());
+        if (!matcher.matches()) {
+            return new ResponseEntity<>("Invalid email format", HttpStatus.BAD_REQUEST);
         }
 
         // Encode the password before saving
@@ -62,9 +88,8 @@ public class UserController {
         // Save the new user to the database
         simpleUserRepository.save(simpleUser);
 
-        // Return a structured JSON response
         ApiResponse apiResponse = new ApiResponse("User created successfully", true);
-        return ResponseEntity.status(HttpStatus.CREATED).body(apiResponse);  // Ensure a structured response
+        return ResponseEntity.status(HttpStatus.CREATED).body(apiResponse);
     }
 
 
