@@ -11,7 +11,6 @@ import tn.esprit.examen.nomPrenomClasseExamen.repositories.MessageChatRepository
 @AllArgsConstructor
 @Service
 public class ChatService implements IChatService {
-  @Autowired
   private MessageChatRepository messageChatRepository;
 
   public MessageChat saveMessage(MessageChat message) {

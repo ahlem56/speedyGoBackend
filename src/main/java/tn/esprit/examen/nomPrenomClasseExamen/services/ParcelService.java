@@ -109,4 +109,20 @@ public class ParcelService implements IParcelService {
     Parcel parcel = getParcelById(id);
     parcelRepository.delete(parcel);
   }
+
+  @Override
+  public List<Parcel> getParcelsForUser(Integer userId) {
+    SimpleUser user = simpleUserRepository.findById(userId)
+      .orElseThrow(() -> new RuntimeException("User not found"));
+    return parcelRepository.findBySimpleUser(user);
+  }
+  // Filtrer les colis créés après une certaine date
+  public List<Parcel> getParcelsAfterDate(Date date) {
+    return parcelRepository.findParcelsAfterDate(date);
+  }
+
+  // Filtrer les colis créés avant une certaine date
+  public List<Parcel> getParcelsBeforeDate(Date date) {
+    return parcelRepository.findParcelsBeforeDate(date);
+  }
 }

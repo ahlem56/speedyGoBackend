@@ -1,11 +1,14 @@
 package tn.esprit.examen.nomPrenomClasseExamen.controllers;
 
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.Parcel;
 import tn.esprit.examen.nomPrenomClasseExamen.services.IParcelService;
 
+import java.util.Date;
 import java.util.List;
 @AllArgsConstructor
 @RequestMapping("/parcel")
@@ -24,7 +27,7 @@ public class ParcelController {
 //    return parcelService.createParcelWithAssignment(parcel, driverId, userId);
 //  }
   @PostMapping("/createParcel/{userId}")
-  public Parcel createParcel(@RequestBody Parcel parcel, @PathVariable Integer userId) {
+  public Parcel createParcel(@Valid  @RequestBody Parcel parcel, @PathVariable Integer userId, @RequestHeader("Authorization") String authorization) {
     return parcelService.createParcel(parcel, userId);
   }
 
@@ -58,10 +61,24 @@ public class ParcelController {
   public List<Parcel> getParcelsByDriver(@PathVariable Long driverId) {
     return parcelService.getParcelsByDriver(driverId);
   }
-
+  @GetMapping("/user/{userId}")
+  public List<Parcel> getParcelsForUser(@PathVariable Integer userId) {
+    return parcelService.getParcelsForUser(userId);
+  }
   // Delete a parcel by its ID
   @DeleteMapping("/delete/{id}")
   public void deleteParcel(@PathVariable("id") Integer id) {
     parcelService.deleteParcel(id);
+  }
+  // Récupérer les colis créés après une certaine date
+  @GetMapping("/after")
+  public List<Parcel> getParcelsAfterDate(@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date date) {
+    return parcelService.getParcelsAfterDate(date);
+  }
+
+  // Récupérer les colis créés avant une certaine date
+  @GetMapping("/before")
+  public List<Parcel> getParcelsBeforeDate(@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date date) {
+    return parcelService.getParcelsBeforeDate(date);
   }
 }

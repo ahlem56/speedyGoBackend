@@ -1,6 +1,8 @@
 package tn.esprit.examen.nomPrenomClasseExamen.controllers;
 
 import lombok.AllArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -23,6 +25,7 @@ import java.util.Optional;
 @RequestMapping("/chat")
 @RestController
 public class ChatController {
+  private static final Logger log = LoggerFactory.getLogger(ChatController.class);
   //@MessageMapping("/chat-sendMessage")
 //@SendTo("/topic/public")
 //     public MessageChat sendMessage(@Payload MessageChat messageChat){
@@ -42,16 +45,29 @@ public class ChatController {
   @MessageMapping("/send")
   @SendTo("/topic/messages")
   public MessageChat sendMessage(@Payload MessageChat message) {
-    Optional<Chat> chat = chatRepository.findById(message.getChat().getChatId());
-    if (chat.isPresent()) {
+    log.info("Message reçu : {}", message);
+
+    if (message.getChat() == null || message.getChat().getChatId() == null) {
+      log.error("Chat ID manquant dans le message !");
+      return null;
+    }
+
+    Optional<Chat> chatOptional = chatRepository.findById(message.getChat().getChatId());
+    if (chatOptional.isPresent()) {
+      Chat chat = chatOptional.get();
       message.setMessageChatDateCreation(new Date());
       message.setMessageChatStatus(false);
-      message.setChat(chat.get());
+      message.setChat(chat);
+
       MessageChat savedMessage = messageChatRepository.save(message);
+      log.info("Message enregistré avec succès : {}", savedMessage);
+
       messagingTemplate.convertAndSend("/topic/messages", savedMessage);
       return savedMessage;
+    } else {
+      log.error("Chat non trouvé pour ID : {}", message.getChat().getChatId());
+      return null;
     }
-    return null;
   }
 
   @GetMapping("/{chatId}")
