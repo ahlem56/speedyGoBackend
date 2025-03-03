@@ -50,13 +50,16 @@ public class PartnersService implements IPartnersService {
                     newPromotion.setPromotionDiscountPercentage(promotionDetails.getPromotionDiscountPercentage());
                     newPromotion.setPromotionStartDate(promotionDetails.getPromotionStartDate());
                     newPromotion.setPromotionEndDate(promotionDetails.getPromotionEndDate());
-                    promotionsRepository.save(newPromotion);
-                    return newPromotion;
+                    return promotionsRepository.save(newPromotion);
                 });
 
+        // ✅ SET THE PROMOTION INSIDE PARTNER
+        partner.setPromotions(promotion);  // 🔥 This line ensures the promotion is linked!
 
+        // ✅ SAVE THE UPDATED PARTNER
         return partnersRepository.save(partner);
     }
+
 
 }
 
