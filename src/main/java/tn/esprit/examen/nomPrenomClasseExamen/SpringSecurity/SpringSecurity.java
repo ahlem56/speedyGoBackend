@@ -3,6 +3,7 @@ package tn.esprit.examen.nomPrenomClasseExamen.SpringSecurity;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
@@ -42,8 +43,8 @@ public class SpringSecurity {
                 .and()
                 .csrf().disable()  // Disable CSRF for API use
                 .authorizeRequests()
-                .requestMatchers("/user/signup", "/user/signin", "/public/**" ,"/trip/**","/driver/**","/Admin/**","/parcel/**","/trip/getTripsForUser/","/subscription/**","/subscription/subscribeToSubscription/**","/user/forgot-password","/user/reset-password","/vehicle/**","/user/upload-profile-photo","/user/profile-photo/**","/trip/acceptTrip/**","/trip/refuseTrip/**","/user/update-profile").permitAll()// Allow these endpoints to be publicly accessible
-                .anyRequest().authenticated()  // All other requests require authentication
+                .requestMatchers("/user/signup", "/user/signin", "/public/**" ,"/trip/**","/driver/**","/Admin/**","/parcel/**","/trip/getTripsForUser/","/subscription/**","/subscription/subscribeToSubscription/**","/user/forgot-password","/user/reset-password","/vehicle/**","/user/upload-profile-photo","/user/profile-photo/**","/trip/acceptTrip/**","/trip/refuseTrip/**","/user/update-profile","/payment/**","/partners/**").permitAll()// Allow these endpoints to be publicly accessible//.anyRequest().authenticated()
+                .anyRequest().permitAll()// All other requests require authentication
                 .and()
                 .formLogin().disable()  // Disable Spring Security's default form login
                 .httpBasic();  // Optionally enable HTTP Basic authentication
@@ -51,4 +52,5 @@ public class SpringSecurity {
         return http.build();
     }
 
-}
+
+    }
