@@ -22,10 +22,13 @@ import tn.esprit.examen.nomPrenomClasseExamen.SpringSecurity.JwtResponse;
 import tn.esprit.examen.nomPrenomClasseExamen.SpringSecurity.JwtUtil;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.Admin;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.Driver;
+import tn.esprit.examen.nomPrenomClasseExamen.entities.Payment;
+import tn.esprit.examen.nomPrenomClasseExamen.entities.PaymentRequest;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.SimpleUser;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.User;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.SimpleUserRepository;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.UserRepository;
+import tn.esprit.examen.nomPrenomClasseExamen.services.PaymentService;
 import tn.esprit.examen.nomPrenomClasseExamen.services.UserService;
 
 import java.io.IOException;
@@ -38,6 +41,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @RequestMapping("/user")
 @RestController
+@CrossOrigin(origins = "http://localhost:4200")
 public class UserController {
 
     private final SimpleUserRepository simpleUserRepository;
@@ -47,6 +51,7 @@ public class UserController {
     private UserRepository userRepository;
     private UserService userService;
     private JavaMailSender mailSender;  // Injection du mailSender ici
+    private PaymentService paymentService;  // Injection du paymentService ici
 
 
     @CrossOrigin(origins = "http://localhost:4200")
@@ -200,5 +205,25 @@ public class UserController {
     }
 */
 
+    @PostMapping("/test-payment")
+    public ResponseEntity<String> testPayment(@RequestBody PaymentRequest paymentRequest) {
+        try {
+            Payment payment = paymentService.processTestPayment(paymentRequest);
+            return ResponseEntity.ok("Payment successful with charge ID: " + payment.getStripeChargeId());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Payment failed: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/process")
+    public ResponseEntity<String> processPayment(@RequestBody PaymentRequest paymentRequest) {
+        try {
+            // Call the service method to process the payment
+            Payment payment = paymentService.processTestPayment(paymentRequest);
+            return ResponseEntity.ok("Payment processed successfully with ID: " + payment.getStripeChargeId());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Payment processing failed: " + e.getMessage());
+        }
+    }
 
 }
