@@ -5,12 +5,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.Driver;
+import tn.esprit.examen.nomPrenomClasseExamen.entities.ReservationStatus;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.SimpleUser;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.Trip;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.DriverRepository;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.SimpleUserRepository;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.TripRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
@@ -29,14 +31,22 @@ public class TripService implements ITripService{
         Driver driver = driverRepository.findById(driverId)
                 .orElseThrow(() -> new RuntimeException("Driver not found"));
 
-        trip.setSimpleUser(simpleUser);  // Assigning the SimpleUser
-        trip.setDriver(driver);          // Assigning the Driver
+        // Check if trip date is in the past
+        if (trip.getTripDate().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Trip date must be in the future.");
+        }
 
-        // Optionally set up payment if required
-        // trip.setPayment(somePaymentObject);
+        // Check number of passengers
+        if (trip.getNumberOfPassengers() < 1 || trip.getNumberOfPassengers() > 4) {
+            throw new IllegalArgumentException("The number of passengers must be between 1 and 4.");
+        }
+
+        trip.setSimpleUser(simpleUser);
+        trip.setDriver(driver);
 
         return tripRepository.save(trip);
     }
+
 
 
     @Override
@@ -75,6 +85,21 @@ public class TripService implements ITripService{
         log.info("Trips fetched: {}", trips);  // Log the trips list
         return trips;
     }
+
+    public Trip acceptTrip(Integer tripId) {
+        Trip trip = tripRepository.findById(tripId)
+                .orElseThrow(() -> new RuntimeException("Trip not found!"));
+        trip.setReservationStatus(ReservationStatus.CONFIRMED);
+        return tripRepository.save(trip);
+    }
+
+    public Trip refuseTrip(Integer tripId) {
+        Trip trip = tripRepository.findById(tripId)
+                .orElseThrow(() -> new RuntimeException("Trip not found!"));
+        trip.setReservationStatus(ReservationStatus.CANCELED);
+        return tripRepository.save(trip);
+    }
+
 
 
 }

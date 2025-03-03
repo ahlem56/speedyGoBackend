@@ -6,5 +6,5 @@ public enum ParcelCategory {
     FRAGILE,
   EXPRESS ,
   LARGE,
-  Oversized
+    OVERSIZED
 }

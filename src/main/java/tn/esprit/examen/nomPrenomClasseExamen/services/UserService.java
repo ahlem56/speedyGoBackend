@@ -7,15 +7,20 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import tn.esprit.examen.nomPrenomClasseExamen.SpringSecurity.JwtUtil;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.Admin;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.Driver;
+import tn.esprit.examen.nomPrenomClasseExamen.entities.Trip;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.UserRepository;
 
 @AllArgsConstructor
 @Service
 public class UserService implements IUserService, org.springframework.security.core.userdetails.UserDetailsService {
-@Autowired
+
     private  UserRepository userRepository;
+    private JwtUtil jwtUtil;
+
+
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -41,7 +46,7 @@ public class UserService implements IUserService, org.springframework.security.c
     }
 
 
-/*
+
     // Implementing the method to update the user's profile photo
     public void updateProfilePhoto(String username, String fileName) {
         // Retrieve the user from the database
@@ -56,8 +61,9 @@ public class UserService implements IUserService, org.springframework.security.c
 
         // Save the updated user object in the database
         userRepository.save(user);
+        System.out.println("✅ Profile photo updated in DB for: " + username);
+
     }
 
 
- */
 }

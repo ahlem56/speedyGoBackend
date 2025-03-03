@@ -24,14 +24,14 @@ public class Parcel {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer parcelId;
     private ParcelCategory parcelCategory;
-  @NotNull
-  private Integer recepeientPhoneNumber;
-  @NotNull
-  private Integer senderPhoneNumber;
-  @NotNull
-  private String parcelDeparture;
-  @NotNull
-  private String parcelDestination;
+    @NotNull
+    private Integer recepeientPhoneNumber;
+    @NotNull
+    private Integer senderPhoneNumber;
+    @NotNull
+    private String parcelDeparture;
+    @NotNull
+    private String parcelDestination;
     private Integer parcelWeight;
     private Date parcelDate;
     private float parcelPrice;

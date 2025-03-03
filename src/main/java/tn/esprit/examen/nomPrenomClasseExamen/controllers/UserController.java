@@ -1,7 +1,10 @@
 package tn.esprit.examen.nomPrenomClasseExamen.controllers;
 
 import lombok.AllArgsConstructor;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -20,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 import tn.esprit.examen.nomPrenomClasseExamen.SpringSecurity.ApiResponse;
 import tn.esprit.examen.nomPrenomClasseExamen.SpringSecurity.JwtResponse;
 import tn.esprit.examen.nomPrenomClasseExamen.SpringSecurity.JwtUtil;
+import tn.esprit.examen.nomPrenomClasseExamen.SpringSecurity.UploadResponse;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.Admin;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.Driver;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.SimpleUser;
@@ -205,25 +209,125 @@ public class UserController {
     }
 
 
-    /*@PostMapping("/upload-profile-photo")
-    public ResponseEntity<String> uploadProfilePhoto(@RequestParam("profilePhoto") MultipartFile file, @AuthenticationPrincipal UserDetails userDetails) {
+    @PostMapping("/upload-profile-photo")
+    public ResponseEntity<?> uploadProfilePhoto(@RequestParam("profilePhoto") MultipartFile file,
+                                                @RequestHeader("Authorization") String token) {
+        System.out.println("🔹 Received Token: " + token);
+
+        if (token == null || !token.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Missing or invalid token"));
+        }
+
+        String jwt = token.substring(7); // Remove "Bearer " prefix
+        String email = jwtUtil.extractUsername(jwt); // Get email from JWT
+
+        System.out.println("🔹 Extracted Email from Token: " + email); // ✅ Debugging
+
+        // 🔹 Check if user exists in DB
+        User user = userRepository.findByUserEmail(email);
+        if (user == null) {
+            System.err.println("❌ ERROR: User not found for email: " + email);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "User not found"));
+        }
+
         try {
-            String fileName = saveFile(file);  // Save the file to a directory or cloud storage
-            // Update the user's profile photo in the database
-            userService.updateProfilePhoto(userDetails.getUsername(), fileName); // Update the user's profile photo in the DB
-            return ResponseEntity.ok("File uploaded successfully: " + fileName);
+            String fileName = saveFile(file);
+            System.out.println("✅ Saved File: " + fileName);
+
+            // ✅ Update user profile photo
+            userService.updateProfilePhoto(email, fileName);
+            return ResponseEntity.ok(Map.of("fileName", fileName));
         } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error uploading file: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "File upload failed"));
         }
     }
 
+
+
+    @GetMapping("/profile-photo/{fileName}")
+    public ResponseEntity<Resource> getProfilePhoto(@PathVariable String fileName) {
+        try {
+            Path path = Paths.get("uploads/" + fileName);
+            Resource resource = new FileSystemResource(path.toFile());
+
+            if (resource.exists() || resource.isReadable()) {
+                String extension = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
+                MediaType mediaType = switch (extension) {
+                    case "png" -> MediaType.IMAGE_PNG;
+                    case "jpg", "jpeg" -> MediaType.IMAGE_JPEG;
+                    case "gif" -> MediaType.IMAGE_GIF;
+                    default -> MediaType.APPLICATION_OCTET_STREAM;
+                };
+
+                return ResponseEntity.ok()
+                        .contentType(mediaType)
+                        .body(resource);
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
+
+
     private String saveFile(MultipartFile file) throws IOException {
         String fileName = file.getOriginalFilename();
-        Path path = Paths.get("uploads/" + fileName);
-        Files.write(path, file.getBytes());
+        Path path = Paths.get("uploads/" + fileName);  // Define the file path
+
+        // Ensure the uploads directory exists
+        Path dirPath = Paths.get("uploads/");
+        if (!Files.exists(dirPath)) {
+            Files.createDirectories(dirPath);  // Create the directory if it doesn't exist
+            System.out.println("Directory 'uploads/' created successfully.");
+        }
+
+        try {
+            Files.write(path, file.getBytes());  // Save the file to the directory
+            System.out.println("File saved successfully at: " + path.toString());
+        } catch (IOException e) {
+            System.err.println("Error saving file: " + e.getMessage());
+            throw new IOException("Error saving file: " + e.getMessage());
+        }
+
         return fileName;  // Returning the file name to update the user's profile photo
     }
-*/
+
+
+    @PutMapping("/update-profile")
+    public ResponseEntity<?> updateProfile(@RequestHeader("Authorization") String token, @RequestBody Map<String, String> updatedData) {
+        // Extract user email from JWT token
+        String jwt = token.substring(7); // Remove "Bearer " prefix
+        String email = jwtUtil.extractUsername(jwt); // Get email from JWT
+
+        User user = userRepository.findByUserEmail(email);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+        }
+
+        // Update fields dynamically
+        if (updatedData.containsKey("firstName")) {
+            user.setUserFirstName(updatedData.get("firstName"));
+        }
+        if (updatedData.containsKey("lastName")) {
+            user.setUserLastName(updatedData.get("lastName"));
+        }
+        if (updatedData.containsKey("email")) {
+            user.setUserEmail(updatedData.get("email"));
+        }
+        if (updatedData.containsKey("address")) {
+            user.setUserAddress(updatedData.get("address"));
+        }
+        if (updatedData.containsKey("birthDate")) {
+            user.setUserBirthDate(java.sql.Date.valueOf(updatedData.get("birthDate"))); // Convert to Date
+        }
+
+        userRepository.save(user); // Save updates
+
+        return ResponseEntity.ok(Map.of("message", "Profile updated successfully"));
+    }
+
 
 
 }

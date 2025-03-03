@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.ReservationStatus;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.Trip;
@@ -59,6 +60,19 @@ public class TripController {
     public List<Trip> getTripsForDriver(@PathVariable Integer driverId) {
         return tripService.getTripsForDriver(driverId);
     }
+
+    @PutMapping("/acceptTrip/{tripId}")
+    public ResponseEntity<Trip> acceptTrip(@PathVariable Integer tripId) {
+        Trip updatedTrip = tripService.acceptTrip(tripId);
+        return ResponseEntity.ok(updatedTrip);
+    }
+
+    @PutMapping("/refuseTrip/{tripId}")
+    public ResponseEntity<Trip> refuseTrip(@PathVariable Integer tripId) {
+        Trip updatedTrip = tripService.refuseTrip(tripId);
+        return ResponseEntity.ok(updatedTrip);
+    }
+
 
 
 }
