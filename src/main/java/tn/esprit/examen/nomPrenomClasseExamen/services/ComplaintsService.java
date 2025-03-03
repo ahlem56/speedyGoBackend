@@ -106,4 +106,10 @@ public class ComplaintsService implements IComplaintsService {
     public Optional<Complaints> getComplaintById(Integer complaintId) {
         return complaintsRepository.findById(complaintId);
     }
+
+
+    @Override
+    public SimpleUser getSimpleUserByComplaintId(Integer complaintId) {
+        return complaintsRepository.findSimpleUserByComplaintId(complaintId);
+    }
 }

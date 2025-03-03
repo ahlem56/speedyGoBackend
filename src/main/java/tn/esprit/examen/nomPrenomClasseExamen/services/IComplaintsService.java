@@ -2,6 +2,7 @@ package tn.esprit.examen.nomPrenomClasseExamen.services;
 
 import tn.esprit.examen.nomPrenomClasseExamen.entities.Complaints;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.Admin;
+import tn.esprit.examen.nomPrenomClasseExamen.entities.SimpleUser;
 
 import java.util.List;
 import java.util.Optional;
@@ -22,4 +23,7 @@ public interface IComplaintsService {
     Complaints ignoreComplaint(Integer id, Integer adminId);
 
     Optional<Complaints> getComplaintById(Integer complaintId);
+
+    SimpleUser getSimpleUserByComplaintId(Integer complaintId);
+
 }

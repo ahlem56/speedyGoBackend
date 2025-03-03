@@ -21,4 +21,5 @@ public interface ICarpoolService {
     Carpool updateCarpool(Integer carpoolId, Integer userId, Carpool updatedCarpool);
     void updateCarpoolStatus(Carpool carpool);
     List<SimpleUser> getUsersWhoJoinedCarpool(Integer carpoolId);
+    List<Carpool> getCarpoolsJoinedByUser(Integer userId);
 }

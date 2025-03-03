@@ -86,5 +86,12 @@ public class CarpoolController {
     public List<SimpleUser> getUsersWhoJoinedCarpool(@PathVariable Integer carpoolId) {
         return carpoolService.getUsersWhoJoinedCarpool(carpoolId);
     }
+
+
+    @GetMapping("/joined/{userId}")
+    public ResponseEntity<List<Carpool>> getCarpoolsJoinedByUser(@PathVariable Integer userId) {
+        List<Carpool> carpools = carpoolService.getCarpoolsJoinedByUser(userId);
+        return ResponseEntity.ok(carpools);
+    }
 }
 

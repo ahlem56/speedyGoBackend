@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.Complaints;
+import tn.esprit.examen.nomPrenomClasseExamen.entities.SimpleUser;
 import tn.esprit.examen.nomPrenomClasseExamen.services.ComplaintsService;
 
 import java.util.List;
@@ -64,6 +65,12 @@ public class ComplaintsController {
     @GetMapping("/{complaintId}")
     public Optional<Complaints> getComplaintById(@PathVariable Integer complaintId) {
         return complaintsService.getComplaintById(complaintId);
+    }
+
+    @GetMapping("/{complaintId}/user")
+    public ResponseEntity<SimpleUser> getUserByComplaintId(@PathVariable Integer complaintId) {
+        SimpleUser user = complaintsService.getSimpleUserByComplaintId(complaintId);
+        return ResponseEntity.ok(user);
     }
 
 }

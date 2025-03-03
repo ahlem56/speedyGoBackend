@@ -198,4 +198,13 @@ public class CarpoolService implements ICarpoolService {
 
         return new ArrayList<>(carpool.getSimpleUserJoin()); // Convertir Set en List
     }
+
+
+    @Override
+    public List<Carpool> getCarpoolsJoinedByUser(Integer userId) {
+        SimpleUser user = simpleUserRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found!"));
+
+        return new ArrayList<>(user.getCarpoolJoined()); // Convertir Set en List
+    }
 }
