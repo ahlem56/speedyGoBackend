@@ -3,6 +3,7 @@ package tn.esprit.examen.nomPrenomClasseExamen.entities;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,12 +22,16 @@ public abstract class  User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer userId;
+    @NotNull
     @JsonProperty("firstName")
     private String userFirstName;
+    @NotNull
     @JsonProperty("lastName")
     private String userLastName;
+    @NotNull
     @JsonProperty("email")
     private String userEmail;
+    @NotNull
     @JsonProperty("password")
     private String userPassword;
     private String userProfilePhoto;
