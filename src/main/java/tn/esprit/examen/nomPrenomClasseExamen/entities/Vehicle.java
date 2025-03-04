@@ -1,5 +1,6 @@
 package tn.esprit.examen.nomPrenomClasseExamen.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -29,8 +30,8 @@ public class Vehicle {
     private Boolean vehiculeInsuranceStatus;
     private Date vehiculeInsuranceDate;
 
-    @OneToOne (mappedBy = "vehicle" , cascade = CascadeType.ALL)
-    @JsonManagedReference
+    @OneToOne(mappedBy = "vehicle", cascade = CascadeType.ALL)
+    @JsonBackReference  // Ensure this annotation is present in Vehicle
     @OnDelete(action = OnDeleteAction.CASCADE)
     private Driver driver;
 

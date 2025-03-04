@@ -15,7 +15,7 @@ import tn.esprit.examen.nomPrenomClasseExamen.services.IAdminService;
 @RequestMapping("/Admin")
 @RestController
 public class AdminController {
-  @Autowired
+
   private IAdminService adminService;
   @PostMapping("/createAdmin")
   public Admin createAdmin(@RequestBody Admin admin) {

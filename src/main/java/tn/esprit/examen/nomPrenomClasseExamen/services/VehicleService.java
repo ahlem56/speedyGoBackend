@@ -52,4 +52,8 @@ public class VehicleService implements IVehicleService {
         driver.setVehicle(vehicle);
         driverRepository.save(driver);
     }
+
+    public List<Vehicle> getAvailableVehicles() {
+        return vehicleRepository.findByDriverIsNull(); // This method filters vehicles with no assigned driver
+    }
 }
