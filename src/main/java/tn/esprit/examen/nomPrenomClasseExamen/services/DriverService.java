@@ -15,9 +15,8 @@ import java.util.Optional;
 @AllArgsConstructor
 @Service
 public class DriverService implements IDriverService {
-  @Autowired
+
   private DriverRepository driverRepository;
-  @Autowired
   private PasswordEncoder passwordEncoder; // Injection du BCryptPasswordEncoder
   @Override
   public Driver createDriver(Driver driver) {
@@ -50,7 +49,19 @@ public class DriverService implements IDriverService {
 
   @Override
   public List<Driver> getAvailableDrivers() {
-    return driverRepository.findByavailibilityDTrue();
+    return driverRepository.findByavailabilityDTrue();
+  }
+
+
+  @Override
+  public Driver updateDriverAvailability(Integer driverId, boolean availability) {
+    Optional<Driver> driverOpt = driverRepository.findById(driverId);
+    if (driverOpt.isPresent()) {
+      Driver driver = driverOpt.get();
+      driver.setAvailabilityD(availability);
+      return driverRepository.save(driver);
+    }
+    return null;
   }
 
 

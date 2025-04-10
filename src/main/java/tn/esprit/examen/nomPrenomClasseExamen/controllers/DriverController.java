@@ -50,4 +50,19 @@ public class DriverController {
     return driverService.getAvailableDrivers();
   }
 
+
+  @GetMapping("/view-driver-profile/{id}")
+  public Driver getDriverProfile(@PathVariable("id") Integer id) {
+    // This method will fetch the driver profile by ID and return the full profile.
+    Optional<Driver> driverOpt = driverService.getDriverById(id);
+    return driverOpt.orElse(null); // Return null if driver is not found
+  }
+
+  @PutMapping("/update-availability/{id}")
+  public Driver updateDriverAvailability(
+          @PathVariable("id") Integer id,
+          @RequestParam("availability") boolean availability) {
+    return driverService.updateDriverAvailability(id, availability);
+  }
+
 }

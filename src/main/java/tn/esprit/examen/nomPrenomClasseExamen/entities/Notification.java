@@ -17,6 +17,7 @@ public class Notification {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer notificationId;
+    @Column(length = 2000)  // or whatever length you need
     private String notificationContent;
     private Date notificationDate;
     private String notificationStatus;

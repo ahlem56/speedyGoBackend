@@ -1,5 +1,6 @@
 package tn.esprit.examen.nomPrenomClasseExamen.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -21,8 +22,14 @@ public class SimpleUser extends User{
 
 
 
-    @OneToMany(mappedBy = "simpleUser", orphanRemoval = true)
-    private Set<Carpool> carpools = new LinkedHashSet<>();
+    @OneToMany(mappedBy = "simpleUserOffer")
+
+    private Set<Carpool> carpoolOffered = new LinkedHashSet<>();//offered carpools
+
+    @ManyToMany(mappedBy = "simpleUserJoin")
+
+    private Set<Carpool> carpoolJoined = new LinkedHashSet<>();//joined carpools
+
 
     @ManyToMany
     @JoinTable(name = "SimpleUser_events",
@@ -40,7 +47,7 @@ public class SimpleUser extends User{
 
 
     @OneToMany(mappedBy = "simpleUser", orphanRemoval = true)
-    private Set<Complaints> complaintses = new LinkedHashSet<>();
+    private Set<Complaints> complaints = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "simpleUser", orphanRemoval = true)
     private Set<Parcel> parcels = new LinkedHashSet<>();

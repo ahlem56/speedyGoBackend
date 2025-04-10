@@ -6,5 +6,5 @@ import tn.esprit.examen.nomPrenomClasseExamen.entities.Driver;
 import java.util.List;
 
 public interface DriverRepository extends JpaRepository<Driver, Integer> {
-    List<Driver> findByavailibilityDTrue();  // Fetch only available drivers
+    List<Driver> findByavailabilityDTrue();  // Fetch only available drivers
 }

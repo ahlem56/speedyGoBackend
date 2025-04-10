@@ -5,4 +5,5 @@ import tn.esprit.examen.nomPrenomClasseExamen.entities.Admin;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.Notification;
 
 public interface NotificationRepository extends JpaRepository<Notification, Integer> {
+
 }

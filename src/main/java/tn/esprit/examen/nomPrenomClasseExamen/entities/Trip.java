@@ -1,15 +1,13 @@
 package tn.esprit.examen.nomPrenomClasseExamen.entities;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Future;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.LinkedHashSet;
@@ -33,12 +31,23 @@ public class Trip {
     @Future(message = "Trip date must be in the future") // Ensure the trip is not scheduled in the past
     private LocalDateTime tripDate; // Change to LocalDateTime for hours & minutes
 
-    private Integer tripDuration;
-    private Float tripPrice;
+    private String tripDuration;
+    private BigDecimal tripPrice;
     @NotNull
     private TripType tripType;
     @Enumerated(EnumType.STRING)
     private ReservationStatus reservationStatus = ReservationStatus.PENDING;
+    @NotNull
+    @DecimalMin("-90.0")
+    @DecimalMax("90.0")
+    private BigDecimal latitude;
+
+    @NotNull
+    @DecimalMin("-180.0")
+    @DecimalMax("180.0")
+    private BigDecimal longitude;
+    private boolean readyForDriverRating; // Indicates if driver can rate passenger
+    private boolean readyForPassengerRating; // Indicates if passenger can rate driver
 
     @NotNull
     @Min(value = 1, message = "Number of passengers must be at least 1")

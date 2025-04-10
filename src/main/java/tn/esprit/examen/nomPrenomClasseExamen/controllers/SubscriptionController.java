@@ -1,8 +1,10 @@
 package tn.esprit.examen.nomPrenomClasseExamen.controllers;
 
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.SimpleUser;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.Subscription;
@@ -19,8 +21,13 @@ public class SubscriptionController {
 
     private final SubscriptionService subscriptionService;
 
+    // Create a subscription
     @PostMapping("/createSubscription")
-    public ResponseEntity<Subscription> createSubscription(@RequestBody Subscription subscription) {
+    public ResponseEntity<Object> createSubscription(@Valid @RequestBody Subscription subscription, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            // Return errors as a response if validation fails
+            return ResponseEntity.badRequest().body(bindingResult.getAllErrors());
+        }
         return new ResponseEntity<>(subscriptionService.createSubscription(subscription), HttpStatus.CREATED);
     }
 

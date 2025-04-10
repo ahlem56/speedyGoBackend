@@ -8,10 +8,12 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import tn.esprit.examen.nomPrenomClasseExamen.SpringSecurity.JwtUtil;
-import tn.esprit.examen.nomPrenomClasseExamen.entities.Admin;
-import tn.esprit.examen.nomPrenomClasseExamen.entities.Driver;
-import tn.esprit.examen.nomPrenomClasseExamen.entities.Trip;
+import tn.esprit.examen.nomPrenomClasseExamen.entities.*;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.UserRepository;
+
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @Service
@@ -19,6 +21,7 @@ public class UserService implements IUserService, org.springframework.security.c
 
     private  UserRepository userRepository;
     private JwtUtil jwtUtil;
+    private RatingService ratingService;
 
 
 
@@ -65,5 +68,27 @@ public class UserService implements IUserService, org.springframework.security.c
 
     }
 
+  /*  public UserRatingStats getUserRatingStats(Integer userId) {
+        tn.esprit.examen.nomPrenomClasseExamen.entities.User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
+        Double averageRating = ratingService.getAverageRatingForUser(userId);
+        List<Rating> ratings = ratingService.getRatingsForUser(userId);
+
+        return new UserRatingStats(
+                averageRating,
+                ratings.size(),
+                calculateRatingDistribution(ratings)
+        );
+    }
+
+    private Map<Integer, Long> calculateRatingDistribution(List<Rating> ratings) {
+        return ratings.stream()
+                .collect(Collectors.groupingBy(
+                        Rating::getScore,
+                        Collectors.counting()
+                ));
+    }
+
+*/
 }

@@ -11,15 +11,19 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @Configuration
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+
   @Override
   public void registerStompEndpoints(StompEndpointRegistry registry) {
-    registry.addEndpoint("/ws-chat").setAllowedOriginPatterns("*").withSockJS();
+    // Register WebSocket endpoint with /examen prefix
+    registry.addEndpoint("/ws-chat")  // Ensure the path is exactly /examen/ws-chat
+            .setAllowedOriginPatterns("*")  // Allow connections from any origin (from Angular frontend)
+            .withSockJS();  // SockJS fallback for unsupported browsers
   }
 
   @Override
   public void configureMessageBroker(MessageBrokerRegistry registry) {
-    registry.enableSimpleBroker("/topic"); // Messages will be sent to clients subscribed to /topic
-    registry.setApplicationDestinationPrefixes("/app"); // Prefix for messages sent from the client
+    registry.enableSimpleBroker("/topic");  // Enable broker for subscribing to topics
+    registry.setApplicationDestinationPrefixes("/app");  // Prefix for messages sent from the client
   }
-
 }
+

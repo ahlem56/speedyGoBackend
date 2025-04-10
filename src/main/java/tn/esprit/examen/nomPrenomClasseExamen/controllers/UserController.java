@@ -24,21 +24,18 @@ import tn.esprit.examen.nomPrenomClasseExamen.SpringSecurity.ApiResponse;
 import tn.esprit.examen.nomPrenomClasseExamen.SpringSecurity.JwtResponse;
 import tn.esprit.examen.nomPrenomClasseExamen.SpringSecurity.JwtUtil;
 import tn.esprit.examen.nomPrenomClasseExamen.SpringSecurity.UploadResponse;
-import tn.esprit.examen.nomPrenomClasseExamen.entities.Admin;
-import tn.esprit.examen.nomPrenomClasseExamen.entities.Driver;
-import tn.esprit.examen.nomPrenomClasseExamen.entities.Payment;
-import tn.esprit.examen.nomPrenomClasseExamen.entities.PaymentRequest;
-import tn.esprit.examen.nomPrenomClasseExamen.entities.SimpleUser;
-import tn.esprit.examen.nomPrenomClasseExamen.entities.User;
+import tn.esprit.examen.nomPrenomClasseExamen.entities.*;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.SimpleUserRepository;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.UserRepository;
 import tn.esprit.examen.nomPrenomClasseExamen.services.PaymentService;
+import tn.esprit.examen.nomPrenomClasseExamen.services.RatingService;
 import tn.esprit.examen.nomPrenomClasseExamen.services.UserService;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Matcher;
@@ -58,6 +55,7 @@ public class UserController {
     private UserService userService;
     private JavaMailSender mailSender;  // Injection du mailSender ici
     private PaymentService paymentService;  // Injection du paymentService ici
+    private RatingService ratingService;
 
 
     @CrossOrigin(origins = "http://localhost:4200")
@@ -354,5 +352,25 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Payment processing failed: " + e.getMessage());
         }
     }
+
+
+    /*@GetMapping("/{userId}/rating-stats")
+    public ResponseEntity<UserRatingStats> getUserRatingStats(@PathVariable Integer userId) {
+        return ResponseEntity.ok(userService.getUserRatingStats(userId));
+    }*/
+
+    @GetMapping("/top-drivers")
+    public ResponseEntity<List<User>> getTopDrivers(
+            @RequestParam(defaultValue = "5") int limit) {
+        return ResponseEntity.ok(ratingService.getTopRatedDrivers(limit));
+    }
+
+    @GetMapping("/top-passengers")
+    public ResponseEntity<List<User>> getTopPassengers(
+            @RequestParam(defaultValue = "5") int limit) {
+        return ResponseEntity.ok(ratingService.getTopRatedPassengers(limit));
+    }
+
+
 
 }

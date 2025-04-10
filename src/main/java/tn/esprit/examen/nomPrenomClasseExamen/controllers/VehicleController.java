@@ -48,4 +48,10 @@ public class VehicleController {
         vehicleService.assignVehicleToDriver(vehicleId, driverId);
     }
 
+    // New endpoint to get available vehicles
+    @GetMapping("/getAvailableVehicles")
+    public List<Vehicle> getAvailableVehicles() {
+        return vehicleService.getAvailableVehicles();
+    }
+
 }

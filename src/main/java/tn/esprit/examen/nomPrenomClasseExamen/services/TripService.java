@@ -4,16 +4,16 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import tn.esprit.examen.nomPrenomClasseExamen.entities.Driver;
-import tn.esprit.examen.nomPrenomClasseExamen.entities.ReservationStatus;
-import tn.esprit.examen.nomPrenomClasseExamen.entities.SimpleUser;
-import tn.esprit.examen.nomPrenomClasseExamen.entities.Trip;
+import tn.esprit.examen.nomPrenomClasseExamen.entities.*;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.DriverRepository;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.SimpleUserRepository;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.TripRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @AllArgsConstructor
@@ -40,6 +40,9 @@ public class TripService implements ITripService{
         if (trip.getNumberOfPassengers() < 1 || trip.getNumberOfPassengers() > 4) {
             throw new IllegalArgumentException("The number of passengers must be between 1 and 4.");
         }
+
+
+
 
         trip.setSimpleUser(simpleUser);
         trip.setDriver(driver);
@@ -101,5 +104,8 @@ public class TripService implements ITripService{
     }
 
 
+    public List<Trip> findTripsBySimpleUser(SimpleUser user) {
+        return tripRepository.findTripsBySimpleUser(user);
+    }
 
 }

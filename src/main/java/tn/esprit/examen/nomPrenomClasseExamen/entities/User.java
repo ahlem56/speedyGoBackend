@@ -43,4 +43,6 @@ public abstract class  User {
     private Date userBirthDate;
     @Column(name = "reset_token")
     private String resetToken;
+    @JsonProperty("emergencyContactEmail")
+    private String emergencyContactEmail;
 }
