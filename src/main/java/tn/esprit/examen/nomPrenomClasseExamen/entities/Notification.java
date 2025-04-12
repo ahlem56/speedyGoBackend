@@ -14,20 +14,20 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Notification {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer notificationId;
-    private String notificationContent;
-    private Date notificationDate;
-    private String notificationStatus;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Integer notificationId;
+  private String notificationContent;
+  private Date notificationDate;
+  private String notificationStatus;
 
-    @ManyToOne
-    @JoinColumn(name = "simple_user_user_id")
-    private SimpleUser simpleUser;
+  @ManyToOne
+  @JoinColumn(name = "simple_user_user_id")
+  private SimpleUser simpleUser;
 
-    @ManyToOne
-    @JoinColumn(name = "driver_user_id")
-    private Driver driver;
+  @ManyToOne
+  @JoinColumn(name = "driver_user_id")
+  private Driver driver;
 
 }
 

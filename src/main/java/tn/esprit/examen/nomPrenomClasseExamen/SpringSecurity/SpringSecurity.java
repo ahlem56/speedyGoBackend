@@ -43,7 +43,7 @@ public class SpringSecurity {
                 .and()
                 .csrf().disable()  // Disable CSRF for API use
                 .authorizeRequests()
-                .requestMatchers("/user/signup", "/user/signin", "/public/**" ,"/trip/**","/driver/**","/Admin/**","/parcel/**","/trip/getTripsForUser/","/subscription/**","/subscription/subscribeToSubscription/**","/user/forgot-password","/user/reset-password","/vehicle/**","/user/upload-profile-photo","/user/profile-photo/**","/trip/acceptTrip/**","/trip/refuseTrip/**","/user/update-profile","/payment/**","/partners/**", "/carpools/**","/carpools/get","/complaints/**").permitAll()// Allow these endpoints to be publicly accessible//.anyRequest().authenticated()
+                .requestMatchers("/user/signup", "/user/signin", "/public/**" ,"/trip/**","/driver/**","/Admin/**","/parcel/**","/trip/getTripsForUser/","/subscription/**","/subscription/subscribeToSubscription/**","/user/forgot-password","/user/reset-password","/vehicle/**","/user/upload-profile-photo","/user/profile-photo/**","/trip/acceptTrip/**","/trip/refuseTrip/**","/user/update-profile","/payment/**","/partners/**", "/carpools/**","/carpools/get","/complaints/**","/ws-chat","/chat").permitAll()// Allow these endpoints to be publicly accessible//.anyRequest().authenticated()
                 .anyRequest().permitAll()// All other requests require authentication
                 .and()
                 .formLogin().disable()  // Disable Spring Security's default form login
