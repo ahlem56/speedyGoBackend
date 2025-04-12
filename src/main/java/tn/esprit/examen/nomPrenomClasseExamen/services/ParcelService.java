@@ -231,6 +231,6 @@ public class ParcelService implements IParcelService {
   public Parcel findParcelById(Integer parcelId) {
     return parcelRepository.findById(parcelId).orElse(null);  // Retourne null si non trouvé
   }
-
+//Notification features
 
 }
