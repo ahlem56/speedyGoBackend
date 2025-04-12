@@ -1,5 +1,6 @@
 package tn.esprit.examen.nomPrenomClasseExamen.entities;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -33,8 +34,10 @@ public class Parcel {
     @NotNull
     private String parcelDestination;
     private Integer parcelWeight;
-    private Date parcelDate;
-    private float parcelPrice;
+  @Temporal(TemporalType.DATE)  // Stocker uniquement la date (sans heure)
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd", timezone = "UTC")
+  private Date parcelDate;
+  private float parcelPrice;
 
     @ManyToOne
     @JoinColumn(name = "simple_user_user_id")
@@ -45,6 +48,10 @@ public class Parcel {
     private Driver driver;
     @OneToOne (mappedBy = "parcel")
     private Payment payment;
+  @Enumerated(EnumType.STRING)
+  private Status status; // Si 'status' est un enum, comme 'DELIVERED'
+  private boolean archived = false; // default false
+
 
 }
 
