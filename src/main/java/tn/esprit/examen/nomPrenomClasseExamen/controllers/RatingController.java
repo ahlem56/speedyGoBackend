@@ -3,7 +3,9 @@ package tn.esprit.examen.nomPrenomClasseExamen.controllers;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import tn.esprit.examen.nomPrenomClasseExamen.entities.Driver;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.Rating;
+import tn.esprit.examen.nomPrenomClasseExamen.entities.User;
 import tn.esprit.examen.nomPrenomClasseExamen.services.RatingService;
 
 import java.util.List;
@@ -21,9 +23,9 @@ public class RatingController {
             @PathVariable Integer tripId,
             @PathVariable Integer raterId,
             @PathVariable Integer ratedId) {
-        return ResponseEntity.ok(
-                ratingService.createRating(rating, tripId, raterId, ratedId)
-        );
+
+        Rating savedRating = ratingService.createRating(rating, tripId, raterId, ratedId);
+        return ResponseEntity.ok(savedRating);
     }
 
     @GetMapping("/user/{userId}")
@@ -32,7 +34,7 @@ public class RatingController {
     }
 
     @GetMapping("/average/{userId}")
-    public ResponseEntity<Double> getAverageRating(@PathVariable Integer userId) {
+    public ResponseEntity<Float> getAverageRating(@PathVariable Integer userId) {
         return ResponseEntity.ok(ratingService.getAverageRatingForUser(userId));
     }
 
@@ -49,5 +51,13 @@ public class RatingController {
         return ResponseEntity.ok(
                 ratingService.canRate(tripId, raterId, ratedId)
         );
+    }
+
+    // New endpoint to get the top-rated drivers
+    @GetMapping("/top-rated-drivers")
+    public ResponseEntity<List<Driver>> getTopRatedDrivers(
+            @RequestParam(defaultValue = "5") int limit) {  // Default limit is 5 drivers
+        List<Driver> topRatedDrivers = ratingService.getTopRatedDrivers(limit);
+        return ResponseEntity.ok(topRatedDrivers);
     }
 }

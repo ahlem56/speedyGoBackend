@@ -55,6 +55,10 @@ public class Trip {
     @Column(name = "number_of_passengers", nullable = false)
     private Integer numberOfPassengers = 1;
 
+    @Column(name = "is_rated")
+    private boolean isRated = false;  // Default value is false
+
+
     @ManyToOne
     @JoinColumn(name = "driver_user_id")
     private Driver driver;

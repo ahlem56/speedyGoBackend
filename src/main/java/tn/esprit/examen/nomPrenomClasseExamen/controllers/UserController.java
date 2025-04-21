@@ -360,7 +360,7 @@ public class UserController {
     }*/
 
     @GetMapping("/top-drivers")
-    public ResponseEntity<List<User>> getTopDrivers(
+    public ResponseEntity<List<Driver>> getTopDrivers(
             @RequestParam(defaultValue = "5") int limit) {
         return ResponseEntity.ok(ratingService.getTopRatedDrivers(limit));
     }

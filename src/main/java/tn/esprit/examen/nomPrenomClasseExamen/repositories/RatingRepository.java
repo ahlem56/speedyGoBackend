@@ -4,6 +4,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import tn.esprit.examen.nomPrenomClasseExamen.entities.Driver;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.Rating;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.Trip;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.User;
@@ -20,7 +21,7 @@ public interface RatingRepository extends JpaRepository<Rating, Integer> {
             "WHERE TYPE(r.rated) = Driver " +
             "GROUP BY r.rated " +
             "ORDER BY AVG(r.score) DESC")
-    List<User> findTopRatedDrivers(Pageable pageable);
+    List<Driver> findTopRatedDrivers(Pageable pageable);
 
     @Query("SELECT r.rated FROM Rating r " +
             "WHERE TYPE(r.rated) = SimpleUser " +
@@ -28,7 +29,7 @@ public interface RatingRepository extends JpaRepository<Rating, Integer> {
             "ORDER BY AVG(r.score) DESC")
     List<User> findTopRatedPassengers(Pageable pageable);
 
-    default List<User> findTopRatedDrivers(int limit) {
+    default List<Driver> findTopRatedDrivers(int limit) {
         return findTopRatedDrivers(PageRequest.of(0, limit));
     }
 

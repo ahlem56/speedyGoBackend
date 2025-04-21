@@ -11,7 +11,6 @@ import tn.esprit.examen.nomPrenomClasseExamen.entities.Notification;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.SimpleUser;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.Trip;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.NotificationRepository;
-import tn.esprit.examen.nomPrenomClasseExamen.repositories.SimpleUserRepository;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -22,8 +21,6 @@ import java.util.Map;
 public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final NotificationController notificationController;
-    @Autowired
-    private SimpleUserRepository simpleUserRepository;
 
     @Autowired
     public NotificationService(NotificationRepository notificationRepository, @Lazy NotificationController notificationController) {
@@ -33,7 +30,6 @@ public class NotificationService {
 
     // Save new notification
     public Notification createNotification(String content, SimpleUser simpleUser) {
-        // Check if content is too long for the database column
         if (content.length() > 1000) {
             content = content.substring(0, 1000);  // Truncate the content if it's too long
         }
@@ -42,25 +38,20 @@ public class NotificationService {
         notification.setNotificationDate(new Date());
         notification.setNotificationStatus("PENDING");
         notification.setSimpleUser(simpleUser);
-
-
         return notificationRepository.save(notification);
     }
 
-
-    // Send notification to user and broadcast to all connected clients
+    // Send notification to a specific user (passenger)
     public void sendNotificationToUser(String message, SimpleUser simpleUser) {
         // Create the notification in the database
         Notification notification = createNotification(message, simpleUser);
-
-        // Send the notification to the specific connected client via SSE
-        notificationController.sendNotificationToClients(message);
+        // Send the notification to the specific user via SSE (passenger's userId)
+        notificationController.sendNotificationToUser(message, simpleUser.getUserId());
     }
 
     // Method to send trip acceptance notification to the passenger
     public void sendTripAcceptanceNotification(Trip trip) {
         SimpleUser passenger = trip.getSimpleUser();
-
         Map<String, Object> message = new HashMap<>();
         message.put("type", "TRIP_ACCEPTED");
         message.put("message", String.format(
@@ -79,8 +70,8 @@ public class NotificationService {
 
         try {
             String jsonMessage = new ObjectMapper().writeValueAsString(message);
-            createNotification(jsonMessage, passenger);
-            notificationController.sendNotificationToClients(jsonMessage);
+            createNotification(jsonMessage, passenger); // Save notification to DB
+            notificationController.sendNotificationToUser(jsonMessage, passenger.getUserId());  // Send notification only to the passenger
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
@@ -88,8 +79,7 @@ public class NotificationService {
 
     // Method to send trip refusal notification to the passenger
     public void sendTripRefusalNotification(Trip trip) {
-        SimpleUser passenger = trip.getSimpleUser(); // Assuming the passenger is stored in the 'simpleUser' field
-
+        SimpleUser passenger = trip.getSimpleUser();
         Map<String, Object> messageData = new HashMap<>();
         messageData.put("refused", true); // Ensure this is correctly set for refusals
         messageData.put("departure", trip.getTripDeparture());
@@ -97,14 +87,14 @@ public class NotificationService {
 
         try {
             String jsonMessage = new ObjectMapper().writeValueAsString(messageData);
-            createNotification(jsonMessage, passenger);  // Save to database
-            notificationController.sendNotificationToClients(jsonMessage);  // Send to client
+            createNotification(jsonMessage, passenger);  // Save to DB
+            notificationController.sendNotificationToUser(jsonMessage, passenger.getUserId());  // Send to specific passenger
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
     }
 
-    // Method to send event creation notifications to all users
+    // Method to send event creation notifications to all users (this is the only scenario where all users receive notifications)
     public void sendEventCreationNotification(Event event) {
         String message = String.format(
                 "{\"eventDescription\": \"%s\", \"eventDate\": \"%s\", \"eventLocation\": \"%s\"}",
@@ -112,11 +102,11 @@ public class NotificationService {
                 event.getEventDate(),
                 event.getEventLocation()
         );
-
-        // Send the notification message to all connected clients
-        notificationController.sendNotificationToClients(message);
+        notificationController.sendNotificationToClients(message);  // This sends the message to all connected users
     }
 
 
+    public List<Notification> getAllNotificationsForUser(SimpleUser user) {
+        return notificationRepository.findBySimpleUserOrderByNotificationDateDesc(user);
+    }
 }
-

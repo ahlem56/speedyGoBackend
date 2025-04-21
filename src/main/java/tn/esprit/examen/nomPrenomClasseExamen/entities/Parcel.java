@@ -48,9 +48,10 @@ public class Parcel {
     private Driver driver;
     @OneToOne (mappedBy = "parcel")
     private Payment payment;
-  @Enumerated(EnumType.STRING)
-  private Status status; // Si 'status' est un enum, comme 'DELIVERED'
-  private boolean archived = false; // default false
+
+    @Enumerated(EnumType.STRING)
+    private Status status; // Si 'status' est un enum, comme 'DELIVERED'
+    private boolean archived = false; // default false
 
 
 }
