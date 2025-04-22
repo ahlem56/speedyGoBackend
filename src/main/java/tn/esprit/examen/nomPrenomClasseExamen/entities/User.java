@@ -43,4 +43,8 @@ public abstract class  User {
     private Date userBirthDate;
     @Column(name = "reset_token")
     private String resetToken;
+    @ManyToOne
+    @JoinColumn(name = "partner_id")
+    private Partners partner;
+
 }

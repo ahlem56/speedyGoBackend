@@ -127,9 +127,13 @@ public class UserController {
 //    }
     @PostMapping("/signin")
     public ResponseEntity<JwtResponse> signIn(@RequestBody SimpleUser simpleUser) {
+        String email = simpleUser.getUserEmail();
       // Récupérer l'utilisateur par email
-      User user = userRepository.findByUserEmail(simpleUser.getUserEmail());
-              if (user == null) {
+        User user = userRepository.findByUserEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+
+        if (user == null) {
             throw new UsernameNotFoundException("User not found");
         }
 
@@ -168,7 +172,9 @@ public class UserController {
     @PostMapping("/forgot-password")
     public ResponseEntity<String> forgotPassword(@RequestBody Map<String, String> request) {
         String email = request.get("email");
-        User user = userRepository.findByUserEmail(email);
+        User user = userRepository.findByUserEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
 
         if (user == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
@@ -229,7 +235,9 @@ public class UserController {
         System.out.println("🔹 Extracted Email from Token: " + email); // ✅ Debugging
 
         // 🔹 Check if user exists in DB
-        User user = userRepository.findByUserEmail(email);
+        User user = userRepository.findByUserEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
         if (user == null) {
             System.err.println("❌ ERROR: User not found for email: " + email);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "User not found"));
@@ -306,7 +314,9 @@ public class UserController {
         String jwt = token.substring(7); // Remove "Bearer " prefix
         String email = jwtUtil.extractUsername(jwt); // Get email from JWT
 
-        User user = userRepository.findByUserEmail(email);
+        User user = userRepository.findByUserEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
         if (user == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
         }

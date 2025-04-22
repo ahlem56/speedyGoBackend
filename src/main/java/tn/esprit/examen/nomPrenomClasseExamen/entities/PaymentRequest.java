@@ -1,6 +1,11 @@
 package tn.esprit.examen.nomPrenomClasseExamen.entities;
 
+import lombok.Data;
+
+@Data
 public class PaymentRequest {
+    private Double paymentAmount;
+    private String paymentMethod;
     private Payment payment;
     private String sourceId;
 
