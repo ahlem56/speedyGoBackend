@@ -3,6 +3,7 @@ package tn.esprit.examen.nomPrenomClasseExamen.controllers;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import tn.esprit.examen.nomPrenomClasseExamen.entities.LocationRecord;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.Vehicle;
 import tn.esprit.examen.nomPrenomClasseExamen.services.VehicleService;
 
@@ -48,10 +49,19 @@ public class VehicleController {
         vehicleService.assignVehicleToDriver(vehicleId, driverId);
     }
 
-    // New endpoint to get available vehicles
     @GetMapping("/getAvailableVehicles")
     public List<Vehicle> getAvailableVehicles() {
         return vehicleService.getAvailableVehicles();
     }
 
+
+    @PutMapping("/updateLocation/{vehicleId}")
+    public Vehicle updateLocation(@PathVariable Integer vehicleId,@RequestParam Double latitude, @RequestParam Double longitude) {
+        return vehicleService.updateLocation(vehicleId,latitude,longitude);
+    }
+
+    @GetMapping("/getTravelHistory/{vehicleId}")
+    public List<LocationRecord> getTravelHistory(@PathVariable Integer vehicleId) {
+        return vehicleService.getTravelHistory(vehicleId);
+    }
 }

@@ -10,7 +10,9 @@ import lombok.Setter;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @Getter
@@ -30,8 +32,18 @@ public class Vehicle {
     private Boolean vehiculeInsuranceStatus;
     private Date vehiculeInsuranceDate;
 
+    private Double latitude;
+    private Double longitude;
+
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date updateTime;
+
+    @ElementCollection
+    @CollectionTable(name = "vehicle_location_history", joinColumns = @JoinColumn(name = "vehicle_id"))
+    private List<LocationRecord> travelHistory = new ArrayList<>();
+
     @OneToOne(mappedBy = "vehicle", cascade = CascadeType.ALL)
-    @JsonBackReference  // Ensure this annotation is present in Vehicle
+    @JsonBackReference
     @OnDelete(action = OnDeleteAction.CASCADE)
     private Driver driver;
 

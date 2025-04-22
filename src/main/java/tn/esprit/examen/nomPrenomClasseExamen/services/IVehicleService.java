@@ -13,4 +13,7 @@ public interface IVehicleService {
     List<Vehicle> getAllVehicles();
     void assignVehicleToDriver(Integer vehicleId, Integer driverId);
 
+    public Vehicle updateLocation(Integer vehicleId,Double latitude,Double longitude);
+
+
 }
