@@ -8,11 +8,14 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 @Component
 public class JwtUtil {
-    private SecretKey secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS256); // Secure key for HS256
+  private final SecretKey secretKey = Keys.hmacShaKeyFor(
+          "your-256-bit-secret-key-here-must-be-32-chars".getBytes(StandardCharsets.UTF_8)
+  ); // Secure key for HS256
   // 🔹 Générer un token avec le rôle
   public String generateToken(String username, String role) {
     return Jwts.builder()

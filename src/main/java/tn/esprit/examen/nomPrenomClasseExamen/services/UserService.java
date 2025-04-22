@@ -50,6 +50,7 @@ public class UserService implements IUserService, org.springframework.security.c
 
 
 
+
     // Implementing the method to update the user's profile photo
     public void updateProfilePhoto(String username, String fileName) {
         // Retrieve the user from the database

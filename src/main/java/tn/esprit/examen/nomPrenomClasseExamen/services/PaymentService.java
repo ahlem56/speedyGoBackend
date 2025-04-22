@@ -4,18 +4,20 @@ import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Charge;
 import com.stripe.param.ChargeCreateParams;
-import lombok.RequiredArgsConstructor;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import tn.esprit.examen.nomPrenomClasseExamen.entities.Parcel;
-import tn.esprit.examen.nomPrenomClasseExamen.entities.Payment;
-import tn.esprit.examen.nomPrenomClasseExamen.entities.PaymentRequest;
-import tn.esprit.examen.nomPrenomClasseExamen.entities.Trip;
+import tn.esprit.examen.nomPrenomClasseExamen.DTO.PaymentRequestDTO;
+import tn.esprit.examen.nomPrenomClasseExamen.entities.*;
 
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.ParcelRepository;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.PaymentRepository;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.TripRepository;
+import com.stripe.param.PaymentIntentCreateParams;
+import com.stripe.model.PaymentIntent;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Date;
 import java.util.List;
 
@@ -26,6 +28,10 @@ public class PaymentService implements IPaymentService {
     private final PaymentRepository paymentRepository;
     private final TripRepository tripRepository;
     private final ParcelRepository parcelRepository;
+    @PostConstruct
+    public void init() {
+        Stripe.apiKey = "sk_test_51Qx4HqRtzrEMIcCe68S8vL8kuWICgv7rI2hga1OI7oDdcv9aRamQbSMmsYI5qLFG0oSWq9KyoblmZgL2TIAUuBMc00jPaF2SSB"; // ✅ Use your secret key
+    }
 
     public PaymentService(PaymentRepository paymentRepository, TripRepository tripRepository, ParcelRepository parcelRepository) {
         this.paymentRepository = paymentRepository;
@@ -36,21 +42,25 @@ public class PaymentService implements IPaymentService {
 
     public Payment createPayment(Payment payment, String sourceId) {
         try {
-            ChargeCreateParams params =
-                ChargeCreateParams.builder()
-                    .setAmount((long) (payment.getPaymentAmount() * 100)) // Convert to cents
+            ChargeCreateParams params = ChargeCreateParams.builder()
+                    .setAmount(payment.getPaymentAmount().multiply(BigDecimal.valueOf(100)).longValue()) // ✅ OK!
+                    // cents
                     .setCurrency("usd")
-                    .setDescription("Payment for Trip")
-                    .setSource(sourceId) // Use the dynamic source ID
+                    .setDescription("Payment for SpeedyGo")
+                    .setSource(sourceId) // ✅ token or payment method ID from frontend
                     .build();
 
             Charge charge = Charge.create(params);
             payment.setStripeChargeId(charge.getId());
+
+            // 💾 Save your payment entity to the DB
             return paymentRepository.save(payment);
-        } catch (StripeException e) {
-            throw new RuntimeException("Stripe payment failed", e);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Stripe charge failed: " + e.getMessage(), e);
         }
     }
+
 
     public List<Payment> getAllPayments() {
         return paymentRepository.findAll();
@@ -161,22 +171,94 @@ public class PaymentService implements IPaymentService {
     }
 
     // Method to process a test payment using Stripe
+    // Fix null payment handling in processTestPayment
     public Payment processTestPayment(PaymentRequest paymentRequest) {
+        if (paymentRequest == null || paymentRequest.getPayment() == null) {
+            throw new IllegalArgumentException("Payment request is invalid");
+        }
+
+        Payment payment = paymentRequest.getPayment();
+        if (payment.getPaymentAmount() == null) {
+            throw new IllegalArgumentException("Payment amount is required");
+        }
+
         try {
-            ChargeCreateParams params =
-                ChargeCreateParams.builder()
-                    .setAmount((long) (paymentRequest.getPayment().getPaymentAmount() * 100)) // Convert to cents
-                    .setCurrency("usd")
+            ChargeCreateParams params = ChargeCreateParams.builder()
+                    .setAmount(payment.getPaymentAmount()
+                            .multiply(BigDecimal.valueOf(100))
+                            .longValueExact())
+                    .setCurrency("USD")
                     .setDescription("Test Payment")
-                    .setSource(paymentRequest.getSourceId()) // Use the dynamic source ID
+                    .setSource(paymentRequest.getSourceId())
                     .build();
 
             Charge charge = Charge.create(params);
-            Payment payment = paymentRequest.getPayment();
             payment.setStripeChargeId(charge.getId());
             return paymentRepository.save(payment);
         } catch (StripeException e) {
-            throw new RuntimeException("Stripe test payment failed", e);
+            log.error("Stripe payment failed: {}", e.getMessage());
+            throw new RuntimeException("Payment processing failed", e);
         }
+    }
+    public String createPaymentIntent(PaymentRequestDTO request) throws StripeException {
+        Stripe.apiKey = "sk_test_51Qx4HqRtzrEMIcCe68S8vL8kuWICgv7rI2hga1OI7oDdcv9aRamQbSMmsYI5qLFG0oSWq9KyoblmZgL2TIAUuBMc00jPaF2SSB";
+
+        // Convert Double to BigDecimal first
+        BigDecimal amount = request.getPaymentAmount();
+
+        PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
+                .setAmount(
+                        amount.multiply(BigDecimal.valueOf(100))  // Now we can use multiply
+                                .setScale(0, RoundingMode.HALF_UP)      // Round to whole number
+                                .longValueExact()                        // Convert to long
+                )
+                .setCurrency("USD")
+                .setAutomaticPaymentMethods(
+                        PaymentIntentCreateParams.AutomaticPaymentMethods
+                                .builder()
+                                .setEnabled(true)
+                                .build()
+                )
+                .build();
+
+        PaymentIntent intent = PaymentIntent.create(params);
+        return intent.getClientSecret();
+    }
+
+    public Payment processPayment(PaymentRequestDTO request) {
+        Payment payment = Payment.builder()
+                .paymentAmount(request.getPaymentAmount())
+                .paymentMethod(request.getPaymentMethod())
+                .paymentDate(new Date())
+                .lastUpdated(new Date())
+                .stripeChargeId(request.getStripePaymentMethodId()) // Optional: store PM ID
+                .build();
+
+        // ✅ Associate with Trip
+        if (request.getTripId() != null) {
+            Trip trip = tripRepository.findById(request.getTripId())
+                    .orElseThrow(() -> new RuntimeException("Trip not found with ID: " + request.getTripId()));
+            payment.setTrip(trip);
+
+            // ✅ Get the simple user from trip and assign the partner
+            if (trip.getSimpleUser() != null && trip.getSimpleUser().getPartners() != null) {
+                payment.setPartner(trip.getSimpleUser().getPartners());
+            }
+        }
+
+        // ✅ Associate with Parcel (optional)
+        if (request.getParcelId() != null) {
+            Parcel parcel = parcelRepository.findById(request.getParcelId())
+                    .orElseThrow(() -> new RuntimeException("Parcel not found with ID: " + request.getParcelId()));
+            payment.setParcel(parcel);
+        }
+
+        return paymentRepository.save(payment);
+    }
+
+
+    @Override
+    public List<Payment> getUserPaymentHistory() {
+        return paymentRepository.findAllByOrderByPaymentDateDesc();
     }
 }

@@ -125,25 +125,25 @@ public class UserController {
 //    }
     @PostMapping("/signin")
     public ResponseEntity<JwtResponse> signIn(@RequestBody SimpleUser simpleUser) {
-      // Récupérer l'utilisateur par email
-      User user = userRepository.findByUserEmail(simpleUser.getUserEmail());
-              if (user == null) {
+        // Récupérer l'utilisateur par email
+        User user = userRepository.findByUserEmail(simpleUser.getUserEmail());
+        if (user == null) {
             throw new UsernameNotFoundException("User not found");
         }
 
 
-      // Vérifier le mot de passe
-      if (!passwordEncoder.matches(simpleUser.getUserPassword(), user.getUserPassword())) {
-        throw new BadCredentialsException("Invalid credentials");
-      }
+        // Vérifier le mot de passe
+        if (!passwordEncoder.matches(simpleUser.getUserPassword(), user.getUserPassword())) {
+            throw new BadCredentialsException("Invalid credentials");
+        }
 
-      // Déterminer dynamiquement la sous-classe de l'utilisateur
-      String role = getRoleFromUser(user);
+        // Déterminer dynamiquement la sous-classe de l'utilisateur
+        String role = getRoleFromUser(user);
 
-      // Générer le token avec le rôle
-      String token = jwtUtil.generateToken(user.getUserEmail(), role);
+        // Générer le token avec le rôle
+        String token = jwtUtil.generateToken(user.getUserEmail(), role);
 
-      // Retourner le token et le rôle
+        // Retourner le token et le rôle
         JwtResponse response = new JwtResponse("Bearer " + token, role);
         response.setUser(user);  // Add the user object to the response
         return ResponseEntity.ok(response);
@@ -151,17 +151,17 @@ public class UserController {
 
     }
 
-  // Méthode pour détecter la sous-classe de l'utilisateur
-  private String getRoleFromUser(User user) {
-    if (user instanceof Admin) {
-      return "Admin";
-    } else if (user instanceof Driver) {
-      return "Driver";
-    } else if (user instanceof SimpleUser) {
-      return "SimpleUser";
+    // Méthode pour détecter la sous-classe de l'utilisateur
+    private String getRoleFromUser(User user) {
+        if (user instanceof Admin) {
+            return "Admin";
+        } else if (user instanceof Driver) {
+            return "Driver";
+        } else if (user instanceof SimpleUser) {
+            return "SimpleUser";
+        }
+        return "Unknown";
     }
-    return "Unknown";
-  }
 
     @PostMapping("/forgot-password")
     public ResponseEntity<String> forgotPassword(@RequestBody Map<String, String> request) {

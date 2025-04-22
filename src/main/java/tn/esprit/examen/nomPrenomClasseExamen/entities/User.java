@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import java.util.Optional;
 
 import java.util.Date;
 
@@ -45,4 +46,8 @@ public abstract class  User {
     private String resetToken;
     @JsonProperty("emergencyContactEmail")
     private String emergencyContactEmail;
+    @ManyToOne
+    @JoinColumn(name = "partner_id")
+    private Partners partner;
+
 }

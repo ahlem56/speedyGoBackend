@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -29,6 +30,11 @@ public class Partners {
     @ManyToOne
     @JoinColumn(name = "promotions_promotion_id")
     private Promotions promotions;
+    @Column(precision = 10, scale = 2)
+    private BigDecimal commissionRate = BigDecimal.valueOf(0.15); // 15% default
+
+    @Column(precision = 12, scale = 2)
+    private BigDecimal totalCommission = BigDecimal.ZERO;
 
 }
 
