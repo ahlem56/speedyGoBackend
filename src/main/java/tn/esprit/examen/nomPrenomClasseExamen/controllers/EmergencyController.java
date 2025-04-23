@@ -42,8 +42,8 @@ public class EmergencyController {
             double latitude = emergencyRequest.getLatitude();
             double longitude = emergencyRequest.getLongitude();
 
-            // Get the actual address of the passenger using Google Maps Geocoding API
-            String locationMessage = getFormattedAddress(latitude, longitude);
+            // Get the Google Maps link to the user's location
+            String locationMessage = getLocationLink(latitude, longitude);
 
             // Prepare email content
             String subject = "Emergency Alert: User in Danger!";
@@ -61,6 +61,14 @@ public class EmergencyController {
                     .body(new ResponseMessage("Failed to send SOS alert."));
         }
     }
+
+    // Function to generate Google Maps link
+    private String getLocationLink(double latitude, double longitude) {
+        // Generate a Google Maps URL using the latitude and longitude
+        String googleMapsLink = "https://www.google.com/maps?q=" + latitude + "," + longitude;
+        return googleMapsLink;
+    }
+
 
     // Function to fetch the address using Google Maps Geocoding API
     private String getFormattedAddress(double latitude, double longitude) {

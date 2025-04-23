@@ -20,8 +20,7 @@ public class EventService implements IEventService {
     private EventRepository eventRepository;
     @Autowired
     private SimpleUserRepository simpleUserRepository;
-    @Autowired
-    private NotificationService notificationService;  // Inject NotificationService
+    private NotificationService notificationService;
 
     @Override
     public List<Event> getAllEvents() {
@@ -30,31 +29,20 @@ public class EventService implements IEventService {
 
     @Override
     public Event getEventById(Integer idEvent) {
-        return eventRepository.findById(idEvent).orElse(null);
+        return eventRepository.findById(idEvent).get();
     }
 
-    @Override
-    public Event createEvent(Event event) {
-        // Create the event and trigger notification
-        Event createdEvent = eventRepository.save(event);
-
-        // Send notifications about the new event to all users
+    @Override public Event createEvent(Event event) { // Create the event and trigger notification
+         Event createdEvent = eventRepository.save(event); // Send notifications about the new event to all users
         notificationService.sendEventCreationNotification(createdEvent);
-
-        return createdEvent;
-    }
+        return createdEvent; }
 
     @Override
     public Event updateEvent(Integer idEvent, Event eventDetails) {
         Event existing = getEventById(idEvent);
-        if (existing != null) {
-            existing.setEventDate(eventDetails.getEventDate());
-            existing.setEventDescription(eventDetails.getEventDescription());
-            existing.setEventLocation(eventDetails.getEventLocation());
-            // etc. for other fields
-            return eventRepository.save(existing);
-        }
-        return null;
+        existing.setEventDate(eventDetails.getEventDate());
+        existing.setEventDescription(eventDetails.getEventDescription());
+        return eventRepository.save(existing);
     }
 
     @Override
@@ -65,33 +53,16 @@ public class EventService implements IEventService {
     @Override
     public void registerUser(Integer idEvent, Integer userId) {
         Event event = getEventById(idEvent);
-        SimpleUser user = simpleUserRepository.findById(userId).orElse(null);
-        if (event != null && user != null) {
-            event.getSimpleUsers().add(user);
-            eventRepository.save(event);
-
-            // Notify the user that they've been registered for the event
-            String message = "You have been successfully registered for the event: " + event.getEventDescription();
-            notificationService.sendNotificationToUser(message, user);
-        }
+        SimpleUser user = simpleUserRepository.findById(userId).get();
+        eventRepository.save(event);
     }
 
     @Override
     public void unregisterUser(Integer idEvent, Integer userId) {
         Event event = getEventById(idEvent);
-        SimpleUser user = simpleUserRepository.findById(userId).orElse(null);
-        if (event != null && user != null) {
-            event.getSimpleUsers().remove(user);
-            eventRepository.save(event);
-
-            // Notify the user that they've been unregistered from the event
-            String message = "You have been unregistered from the event: " + event.getEventDescription();
-            notificationService.sendNotificationToUser(message, user);
-        }
+        SimpleUser user = simpleUserRepository.findById(userId).get();
     }
-
     public List<SimpleUser> getAllSimpleUsers() {
         return simpleUserRepository.findAll();  // Assuming you have a SimpleUserRepository
     }
-
 }

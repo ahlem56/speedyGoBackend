@@ -4,10 +4,12 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.Driver;
+import tn.esprit.examen.nomPrenomClasseExamen.entities.LocationRecord;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.Vehicle;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.DriverRepository;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.VehicleRepository;
 
+import java.util.Date;
 import java.util.List;
 
 @Slf4j
@@ -53,7 +55,47 @@ public class VehicleService implements IVehicleService {
         driverRepository.save(driver);
     }
 
-    public List<Vehicle> getAvailableVehicles() {
-        return vehicleRepository.findByDriverIsNull(); // This method filters vehicles with no assigned driver
+    /*@Override
+    public Vehicle updateLocation(Integer vehicleId, Double latitude, Double longitude) {
+        Vehicle vehicle = vehicleRepository.findById(vehicleId).get();
+        vehicle.setLatitude(latitude);
+        vehicle.setLongitude(longitude);
+        return vehicleRepository.save(vehicle);
     }
+
+     */
+    @Override
+    public Vehicle updateLocation(Integer vehicleId, Double latitude, Double longitude) {
+        Vehicle vehicle = vehicleRepository.findById(vehicleId)
+                .orElseThrow(() -> new RuntimeException("Véhicule introuvable"));
+
+        vehicle.setLatitude(latitude);
+        vehicle.setLongitude(longitude);
+        // Mise à jour de l'instantané de la position et de l'heure
+        Date now = new Date();
+        vehicle.setUpdateTime(now);
+
+        // Ajout d'un nouvel enregistrement dans l'historique de trajet
+        vehicle.getTravelHistory().add(new LocationRecord(latitude, longitude, now));
+
+        return vehicleRepository.save(vehicle);
+    }
+
+    public List<Vehicle> getAvailableVehicles() {
+        return vehicleRepository.findByDriverIsNull();
+    }
+
+    // Méthode pour récupérer l'historique depuis l'entité Vehicle
+    public List<LocationRecord> getTravelHistory(Integer vehicleId) {
+        Vehicle vehicle = vehicleRepository.findById(vehicleId)
+                .orElseThrow(() -> new RuntimeException("Véhicule introuvable"));
+        return vehicle.getTravelHistory();
+    }
+
+        /*
+        public List<Vehicle> getAvailableVehicles() {
+            return vehicleRepository.findByDriverIsNull(); // This method filters vehicles with no assigned driver
+        }
+
+         */
 }

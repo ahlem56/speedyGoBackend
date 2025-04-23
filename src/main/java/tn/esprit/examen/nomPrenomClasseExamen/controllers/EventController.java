@@ -5,11 +5,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.Event;
-import tn.esprit.examen.nomPrenomClasseExamen.entities.SimpleUser;
 import tn.esprit.examen.nomPrenomClasseExamen.services.EventService;
 import tn.esprit.examen.nomPrenomClasseExamen.services.NotificationService;
 
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @AllArgsConstructor
 @RestController
@@ -17,24 +19,53 @@ import java.util.List;
 public class EventController {
 
     private final EventService eventService;
-    private final NotificationService notificationService;  // Inject NotificationService
+    private final NotificationService notificationService;
 
     @GetMapping("/getAllEvent")
     public ResponseEntity<List<Event>> getAllEvents() {
         return ResponseEntity.ok(eventService.getAllEvents());
     }
 
+    @GetMapping("/getEvent/{id}")
+    public ResponseEntity<Event> getEventById(@PathVariable Integer id) {
+        return ResponseEntity.ok(eventService.getEventById(id));
+    }
+
     @PostMapping("/createEvent")
     public ResponseEntity<?> createEvent(@RequestBody Event event) {
         try {
             Event createdEvent = eventService.createEvent(event);
-
-            // Send event creation notification to all connected clients
             notificationService.sendEventCreationNotification(createdEvent);
 
             return new ResponseEntity<>(createdEvent, HttpStatus.CREATED);
         } catch (Exception e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("message", "Validation error: " + e.getMessage());
+            errorResponse.put("timestamp", LocalDateTime.now().toString());
+            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
         }
+    }
+
+    @PutMapping("/updateEvent/{id}")
+    public ResponseEntity<Event> updateEvent(@PathVariable Integer id, @RequestBody Event eventDetails) {
+        return ResponseEntity.ok(eventService.updateEvent(id, eventDetails));
+    }
+
+    @DeleteMapping("/deleteEvent/{id}")
+    public ResponseEntity<Void> deleteEvent(@PathVariable Integer id) {
+        eventService.deleteEvent(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/registreUser/{idEvent}/register/{userId}")
+    public ResponseEntity<Void> registerUser(@PathVariable Integer idEvent, @PathVariable Integer userId) {
+        eventService.registerUser(idEvent, userId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/unregistreUser/{idEvent}/unregister/{userId}")
+    public ResponseEntity<Void> unregisterUser(@PathVariable Integer idEvent, @PathVariable Integer userId) {
+        eventService.unregisterUser(idEvent, userId);
+        return ResponseEntity.ok().build();
     }
 }
