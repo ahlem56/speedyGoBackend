@@ -30,7 +30,7 @@ public interface IParcelService {
   long getDeliveredParcelsByWeek(Date date);
 
   long getDeliveredParcelsByMonth(Date date);
-  void markAsShipped(Long parcelId) throws Exception;
+  Parcel markAsShipped(Long parcelId) throws Exception;
   void markAsDelivered(Long parcelId) throws Exception;
   List<Parcel> archiveDeliveredParcels();
   List<Parcel> getParcelsByStatus(Status status);  // Méthode pour récupérer les colis par statut

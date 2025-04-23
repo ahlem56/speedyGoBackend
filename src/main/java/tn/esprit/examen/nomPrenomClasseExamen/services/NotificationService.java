@@ -6,10 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import tn.esprit.examen.nomPrenomClasseExamen.controllers.NotificationController;
-import tn.esprit.examen.nomPrenomClasseExamen.entities.Event;
-import tn.esprit.examen.nomPrenomClasseExamen.entities.Notification;
-import tn.esprit.examen.nomPrenomClasseExamen.entities.SimpleUser;
-import tn.esprit.examen.nomPrenomClasseExamen.entities.Trip;
+import tn.esprit.examen.nomPrenomClasseExamen.entities.*;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.NotificationRepository;
 
 import java.util.Date;
@@ -104,6 +101,31 @@ public class NotificationService {
         );
         notificationController.sendNotificationToClients(message);  // This sends the message to all connected users
     }
+  //  Envoie une notification quand un colis est expédié
+  public void sendParcelShippedNotification(Parcel parcel) {
+    SimpleUser user = parcel.getSimpleUser(); // 🔁 Assure-toi que getCreatedBy() renvoie bien un SimpleUser
+
+    Map<String, Object> message = new HashMap<>();
+    message.put("type", "PARCEL_SHIPPED");
+    message.put("message", String.format(
+      "Your parcel to %s has been shipped!",
+      parcel.getParcelDestination()
+    ));
+    message.put("details", Map.of(
+      "parcelId", parcel.getParcelId(),
+      "destination", parcel.getParcelDestination(),
+      "status", parcel.getStatus().toString()
+    ));
+    message.put("timestamp", new Date());
+
+    try {
+      String jsonMessage = new ObjectMapper().writeValueAsString(message);
+      createNotification(jsonMessage, user);
+      notificationController.sendNotificationToClients(jsonMessage);
+    } catch (JsonProcessingException e) {
+      e.printStackTrace();
+    }
+  }
 
 
     public List<Notification> getAllNotificationsForUser(SimpleUser user) {

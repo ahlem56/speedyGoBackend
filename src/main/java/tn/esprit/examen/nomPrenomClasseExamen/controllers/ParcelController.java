@@ -11,6 +11,7 @@ import tn.esprit.examen.nomPrenomClasseExamen.entities.Parcel;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.Status;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.ParcelRepository;
 import tn.esprit.examen.nomPrenomClasseExamen.services.IParcelService;
+import tn.esprit.examen.nomPrenomClasseExamen.services.NotificationService;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -28,6 +29,8 @@ public class ParcelController {
   private IParcelService parcelService;
   @Autowired
   private ParcelRepository parcelRepository;
+  private NotificationService notificationService; // Inject NotificationService
+
   // Create a new parcel and assign it to a driver and a user
   //http://localhost:8089/examen/parcel/createParcel/4/5
 //  @PostMapping("/createParcel/{userId}/{driverId}")
@@ -38,7 +41,7 @@ public class ParcelController {
 //    return parcelService.createParcelWithAssignment(parcel, driverId, userId);
 //  }
   @PostMapping("/createParcel/{userId}")
-  public Parcel createParcel(@Valid  @RequestBody Parcel parcel, @PathVariable Integer userId, @RequestHeader("Authorization") String authorization) {
+  public Parcel createParcel(@Valid  @RequestBody Parcel parcel, @PathVariable Integer userId,@RequestHeader("Authorization") String authorization) {
     return parcelService.createParcel(parcel, userId);
   }
 
@@ -116,10 +119,25 @@ public class ParcelController {
   }
   //API POUR changer l'etat de parcel en SHIPPED
   // Endpoint pour marquer un colis comme SHIPPED
+   /*
+    @PutMapping("/acceptTrip/{tripId}")
+    public ResponseEntity<Trip> acceptTrip(@PathVariable Integer tripId) {
+        Trip updatedTrip = tripService.acceptTrip(tripId);
+
+        // Trigger notification to SimpleUser when a driver accepts a trip
+        SimpleUser simpleUser = updatedTrip.getSimpleUser();
+        notificationService.sendTripAcceptanceNotification(updatedTrip);  // Send trip details to clients
+
+        return ResponseEntity.ok(updatedTrip);
+    }*/
   @PutMapping("/{id}/shipped")
   public ResponseEntity<Map<String, String>> markParcelAsShipped(@PathVariable("id") Long parcelId) {
     try {
-      parcelService.markAsShipped(parcelId);
+      Parcel parcel = parcelService.markAsShipped(parcelId); // <- Change ici : on récupère le parcel mis à jour
+
+      // 🔔 Envoyer une notification à l'utilisateur
+      notificationService.sendParcelShippedNotification(parcel);
+
       Map<String, String> response = new HashMap<>();
       response.put("status", "success");
       response.put("message", "Parcel marked as shipped");
@@ -162,6 +180,8 @@ public class ParcelController {
   public Map<String, Float> getYearlyRevenue() {
     return parcelService.calculateYearlyRevenue();
   }
+
+
 }
 
 

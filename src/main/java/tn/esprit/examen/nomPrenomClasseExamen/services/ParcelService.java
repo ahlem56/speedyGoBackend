@@ -24,6 +24,9 @@ public class ParcelService implements IParcelService {
   private DriverRepository driverRepository;
   @Autowired
   private SimpleUserRepository simpleUserRepository;
+  @Autowired
+  private IAParcelEstimatorService iaParcelEstimatorService;
+
 //    @Override
 //    public Parcel createParcel(Parcel parcel) {
 //        return parcelRepository.save(parcel);
@@ -31,18 +34,20 @@ public class ParcelService implements IParcelService {
 
   @Override
   public Parcel createParcel(Parcel parcel, Integer userId) {
-    // Vérifier si le SimpleUser existe
     SimpleUser user = simpleUserRepository.findById(userId)
       .orElseThrow(() -> new RuntimeException("SimpleUser not found with id: " + userId));
 
-    // Associer le colis à l'utilisateur
     parcel.setSimpleUser(user);
-    parcel.setParcelDate(new Date()); // Définir la date de création
-    parcel.setParcelPrice(determineParcelPrice(parcel.getParcelWeight()));
-    // Définir le statut par défaut à PENDING
+    parcel.setParcelDate(new Date());
+
+    // 💡 Utiliser le modèle IA pour estimer le prix
+    float estimatedPrice = iaParcelEstimatorService.getEstimatedPrice(parcel.getParcelWeight(), parcel.getParcelCategory().toString());
+    parcel.setParcelPrice(estimatedPrice);
+
     parcel.setStatus(Status.PENDING);
     return parcelRepository.save(parcel);
   }
+
 
 
   @Override
@@ -156,12 +161,13 @@ public class ParcelService implements IParcelService {
   }
 
   @Override
-  public void markAsShipped(Long parcelId) throws Exception {
+  public Parcel markAsShipped(Long parcelId) throws Exception {
     // Si votre repository utilise Integer comme clé, convertissez le Long en Integer
     Parcel parcel = parcelRepository.findById(parcelId.intValue())
       .orElseThrow(() -> new Exception("Parcel not found with id: " + parcelId));
     parcel.setStatus(Status.SHIPPED);
-    parcelRepository.save(parcel);
+    return parcelRepository.save(parcel); // ← retourne le colis mis à jour
+
   }
 
   @Override
