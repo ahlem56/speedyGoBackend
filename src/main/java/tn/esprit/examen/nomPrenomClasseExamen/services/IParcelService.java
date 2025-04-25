@@ -1,9 +1,11 @@
 package tn.esprit.examen.nomPrenomClasseExamen.services;
 
+import org.springframework.web.multipart.MultipartFile;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.Parcel;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.SimpleUser;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.Status;
 
+import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -40,4 +42,7 @@ public interface IParcelService {
   public Parcel save(Parcel parcel) ;
   public List<Parcel> searchParcelsForDriver(Long driverId, String departure, String destination) ;
 
-  }
+  //DAMAGED PARCEL
+  public String saveDamageImage(Integer parcelId, MultipartFile image, String description) throws IOException ;
+  public List<Parcel> getAllDamagedParcels() ;
+}

@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.Driver;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.Parcel;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.SimpleUser;
@@ -12,6 +13,11 @@ import tn.esprit.examen.nomPrenomClasseExamen.repositories.ParcelRepository;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.SimpleUserRepository;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.Status;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Slf4j
@@ -239,4 +245,51 @@ public class ParcelService implements IParcelService {
   }
 //Notification features
 
+  //
+//  public String saveDamageImage(Integer parcelId, MultipartFile image, String description) throws IOException {
+//    Parcel parcel = parcelRepository.findById(parcelId)
+//      .orElseThrow(() -> new RuntimeException("Parcel not found"));
+//
+//    // Stocke l'image quelque part
+//    String fileName = UUID.randomUUID() + "_" + image.getOriginalFilename();
+//    Path imagePath = Paths.get("uploads/damaged-parcels", fileName);
+//    Files.createDirectories(imagePath.getParent());
+//    Files.write(imagePath, image.getBytes());
+//    String imageUrl = "/uploads/damaged-parcels/" + fileName;
+//    // Mets à jour le colis
+//    parcel.setDamageImageUrl(imagePath.toString());
+//    parcel.setDamageDescription(description);
+//    parcel.setDamageReportedAt(LocalDateTime.now());
+//
+//    parcelRepository.save(parcel);
+//
+//    return imageUrl;
+//  }
+  public String saveDamageImage(Integer parcelId, MultipartFile image, String description) throws IOException {
+    Parcel parcel = parcelRepository.findById(parcelId)
+      .orElseThrow(() -> new RuntimeException("Parcel not found"));
+
+    // Stocke l'image quelque part
+    String fileName = UUID.randomUUID() + "_" + image.getOriginalFilename();
+    Path imagePath = Paths.get("uploads/damaged-parcels", fileName);  // Chemin physique sur le disque
+
+    Files.createDirectories(imagePath.getParent());  // Créer les répertoires si nécessaire
+    Files.write(imagePath, image.getBytes());  // Enregistrer l'image
+
+    // Utilisation du chemin relatif pour l'URL
+    String imageUrl = "/uploads/damaged-parcels/" + fileName;  // URL accessible depuis le frontend
+
+    // Mets à jour le colis
+    parcel.setDamageImageUrl(imageUrl);  // Enregistrer le chemin relatif dans la base de données
+    parcel.setDamageDescription(description);
+    parcel.setDamageReportedAt(LocalDateTime.now());
+
+    parcelRepository.save(parcel);
+
+    return imageUrl;  // Retourner l'URL qui sera utilisé dans le frontend
+  }
+
+  public List<Parcel> getAllDamagedParcels() {
+    return parcelRepository.findByDamageImageUrlIsNotNull();  // Fetch all damaged parcels
+  }
 }

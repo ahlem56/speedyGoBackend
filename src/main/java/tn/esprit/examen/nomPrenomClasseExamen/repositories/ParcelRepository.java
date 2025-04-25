@@ -35,5 +35,6 @@ public interface ParcelRepository extends JpaRepository<Parcel, Integer> {
   long countDeliveredParcelsByMonth(@Param("date") Date date);
   List<Parcel> findByStatusAndArchivedFalse(Status status);
   List<Parcel> findByStatus(Status status);  // Méthode pour récupérer les colis par statut
+  List<Parcel> findByDamageImageUrlIsNotNull();  // Fetch parcels with damage reported
 
 }

@@ -7,6 +7,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.Parcel;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.Status;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.ParcelRepository;
@@ -181,6 +182,47 @@ public class ParcelController {
     return parcelService.calculateYearlyRevenue();
   }
 
+  //DAMAGED PARCEL
+  @PostMapping("/{id}/report-damage")
+  public ResponseEntity<String> reportDamagedParcel(
+    @PathVariable Long id,
+    @RequestParam("image") MultipartFile image,
+    @RequestParam(value = "description", required = false) String description) {
+    try {
+      String imageUrl = parcelService.saveDamageImage(Math.toIntExact(id), image, description);
+      return ResponseEntity.ok("Damage reported. Image saved at: " + imageUrl);
+    } catch (Exception e) {
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .body("Error reporting damage: " + e.getMessage());
+    }
+  }
+//  @GetMapping("/damaged")
+//  public List<Parcel> getDamagedParcels() {
+//    List<Parcel> damagedParcels = parcelService.getAllDamagedParcels();
+//
+//    // Ajouter l'URL complète de l'image avec le sous-dossier "damaged-parcels"
+//    damagedParcels.forEach(parcel -> {
+//      if (parcel.getDamageImageUrl() != null) {
+//        parcel.setDamageImageUrl( parcel.getDamageImageUrl());
+//      }
+//    });
+//
+//    return damagedParcels;
+//  }
+@GetMapping("/damaged")
+public List<Parcel> getDamagedParcels() {
+  List<Parcel> damagedParcels = parcelService.getAllDamagedParcels();
+
+  // Ajouter l'URL complète de l'image avec le sous-dossier "damaged-parcels"
+  damagedParcels.forEach(parcel -> {
+    if (parcel.getDamageImageUrl() != null) {
+      // Assurer que l'URL soit complète
+      parcel.setDamageImageUrl("http://localhost:8089" + parcel.getDamageImageUrl());
+    }
+  });
+
+  return damagedParcels;
+}
 
 }
 
