@@ -1,7 +1,11 @@
 package tn.esprit.examen.nomPrenomClasseExamen.services;
 
 import lombok.AllArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.ComplaintStatus;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.Complaints;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.Admin;
@@ -10,12 +14,17 @@ import tn.esprit.examen.nomPrenomClasseExamen.repositories.AdminRepository;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.ComplaintsRepository;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.SimpleUserRepository;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.time.LocalDate;
+import java.time.ZoneId;
 
 @Service
 @AllArgsConstructor
 public class ComplaintsService implements IComplaintsService {
+
+    private static final Logger log = LoggerFactory.getLogger(ComplaintsService.class);
 
     private final ComplaintsRepository complaintsRepository;
     private final SimpleUserRepository simpleUserRepository;
@@ -26,7 +35,7 @@ public class ComplaintsService implements IComplaintsService {
         SimpleUser simpleUser = simpleUserRepository.findById(simpleUserId)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
         complaint.setSimpleUser(simpleUser);
-        complaint.setComplaintCreationDate(new java.util.Date());
+        complaint.setComplaintCreationDate(new Date());
         complaint.setComplaintStatus(ComplaintStatus.pending);
         return complaintsRepository.save(complaint);
     }
@@ -79,7 +88,6 @@ public class ComplaintsService implements IComplaintsService {
 
         complaint.setResponse(response);
         complaint.setComplaintStatus(ComplaintStatus.resolved);
-
         return complaintsRepository.save(complaint);
     }
 
@@ -92,10 +100,8 @@ public class ComplaintsService implements IComplaintsService {
                 .orElseThrow(() -> new RuntimeException("Admin non trouvé"));
 
         complaint.setComplaintStatus(ComplaintStatus.ignored);
-
         return complaintsRepository.save(complaint);
     }
-
 
     @Override
     public List<Complaints> getAllComplaints() {
@@ -107,9 +113,50 @@ public class ComplaintsService implements IComplaintsService {
         return complaintsRepository.findById(complaintId);
     }
 
-
     @Override
     public SimpleUser getSimpleUserByComplaintId(Integer complaintId) {
         return complaintsRepository.findSimpleUserByComplaintId(complaintId);
+    }
+
+    @Scheduled(cron = "0 0 0 * * ?") // Tous les jours à minuit
+    @Transactional
+    public void closeOldPendingComplaints() {
+        log.info("Starting closeOldPendingComplaints at {}", new Date());
+
+        // Calculer la date seuil (30 jours avant aujourd'hui, en UTC)
+        LocalDate thresholdLocalDate = LocalDate.now(ZoneId.of("UTC")).minusDays(30);
+        Date thresholdDate = Date.from(thresholdLocalDate.atStartOfDay(ZoneId.of("UTC")).toInstant());
+
+        log.info("Threshold date for closing complaints: {}", thresholdDate);
+
+        // Vérifier toutes les réclamations pending pour débogage
+        List<Complaints> allPendingComplaints = complaintsRepository.findByComplaintStatus(ComplaintStatus.pending);
+        log.info("Total pending complaints found: {}", allPendingComplaints.size());
+        for (Complaints complaint : allPendingComplaints) {
+            log.info("Pending complaint ID {} has creation date: {}",
+                    complaint.getComplaintId(), complaint.getComplaintCreationDate());
+        }
+
+        // Récupérer les réclamations pending de plus de 30 jours
+        List<Complaints> oldPendingComplaints = complaintsRepository.findByComplaintStatusAndCreationDateBefore(
+                ComplaintStatus.pending, thresholdDate);
+
+        log.info("Found {} old pending complaints to close", oldPendingComplaints.size());
+
+        // Traiter chaque réclamation
+        for (Complaints complaint : oldPendingComplaints) {
+            if (complaint.getComplaintCreationDate() != null) {
+                log.info("Processing complaint ID {} with creation date {}",
+                        complaint.getComplaintId(), complaint.getComplaintCreationDate());
+                complaint.setComplaintStatus(ComplaintStatus.ignored);
+                complaint.setResponse("Réclamation non traitée après 30 jours");
+                complaintsRepository.save(complaint);
+                log.info("Closed complaint ID {} as ignored", complaint.getComplaintId());
+            } else {
+                log.warn("Skipping complaint ID {} with null creation date", complaint.getComplaintId());
+            }
+        }
+
+        log.info("Finished closeOldPendingComplaints");
     }
 }

@@ -15,6 +15,13 @@ public class Rules {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer ruleId;
 
+    private Integer pointsForJoin; // Points added when a user joins a carpool
+    private Integer pointsForCancel; // Points deducted when a user cancels a carpool
+    private Integer pointsDeductedPerInactiveDay; // Points deducted per day of inactivity
+    private Integer inactiveDaysThreshold; // Number of days without activity before deduction
+    private Integer topActivePointsThreshold; // Points required for TOP_ACTIVE level
+    private Integer contributeurPointsThreshold; // Points required for CONTRIBUTEUR level
+
 
     @ManyToOne
     @JoinColumn(name = "trip_trip_id")

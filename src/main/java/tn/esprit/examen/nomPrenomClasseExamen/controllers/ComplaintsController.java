@@ -63,9 +63,12 @@ public class ComplaintsController {
     }
 
     @GetMapping("/{complaintId}")
-    public Optional<Complaints> getComplaintById(@PathVariable Integer complaintId) {
-        return complaintsService.getComplaintById(complaintId);
+    public ResponseEntity<Complaints> getComplaintById(@PathVariable Integer complaintId) {
+        return complaintsService.getComplaintById(complaintId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
+
 
     @GetMapping("/{complaintId}/user")
     public ResponseEntity<SimpleUser> getUserByComplaintId(@PathVariable Integer complaintId) {

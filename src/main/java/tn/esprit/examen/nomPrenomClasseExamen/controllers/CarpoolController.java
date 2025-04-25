@@ -22,9 +22,9 @@ public class CarpoolController {
         return carpoolService.ajouterCarpoolEtAffecterUser(carpool, offerId);
     }
 
-    @PostMapping("/join/{carpoolId}/{userId}")
-    public Carpool joinCarpool(@PathVariable Integer carpoolId, @PathVariable Integer userId) {
-        return carpoolService.joinCarpool(carpoolId, userId);
+    @PostMapping("/join/{carpoolId}/{simpleUserId}")
+    public Carpool joinCarpool(@PathVariable Integer carpoolId, @PathVariable Integer simpleUserId, @RequestBody Integer numberOfPlaces) {
+        return carpoolService.joinCarpool(carpoolId, simpleUserId, numberOfPlaces);
     }
 
     /*@PutMapping("/update/{carpoolId}/{offerId}")
@@ -47,9 +47,10 @@ public class CarpoolController {
         return carpoolService.getAllCarpools();
     }
     @GetMapping("/future")
-    public List<Carpool> getFutureCarpools() {
-        return carpoolService.getFutureCarpools();
+    public List<Carpool> getFutureCarpools(@RequestParam Integer userId) {
+        return carpoolService.getFutureCarpools(userId);
     }
+
 
     @GetMapping("/get/{carpoolId}")
     public Carpool getCarpoolById(@PathVariable Integer carpoolId) {
@@ -93,5 +94,12 @@ public class CarpoolController {
         List<Carpool> carpools = carpoolService.getCarpoolsJoinedByUser(userId);
         return ResponseEntity.ok(carpools);
     }
+
+
+    @GetMapping("/recommended/{userId}")
+    public List<Carpool> getRecommended(@PathVariable Integer userId) {
+        return carpoolService.getOrderedRecommendedCarpools(userId);
+    }
+
 }
 

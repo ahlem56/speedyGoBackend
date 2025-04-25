@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -19,7 +20,14 @@ import java.util.Set;
 public class SimpleUser extends User{
     private Integer partnerCodeSuser;
     private Boolean subscriptionSuser;
-    private Integer carpolingDoneSuser;
+    private Integer carpolingDoneSuser = 0; // Nombre d'offres créées
+
+    private Integer points=0 ; // Points initiaux
+    private LocalDateTime lastActiveDate = LocalDateTime.now();
+
+    @Enumerated(EnumType.STRING)
+    private ActivityLevel activityLevel = ActivityLevel.INACTIF;
+
     private LocalDate subscriptionStartDate;
 
 

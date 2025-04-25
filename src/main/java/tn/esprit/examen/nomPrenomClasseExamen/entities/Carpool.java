@@ -5,10 +5,10 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.Date;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.*;
+
 @Entity
 @Getter
 @Setter
@@ -34,6 +34,8 @@ public class Carpool {
     private String licensePlate ;
 
 
+    private LocalDateTime creationTime = LocalDateTime.now();
+
 
     @ManyToOne
     @JsonIgnore
@@ -47,6 +49,10 @@ public class Carpool {
             inverseJoinColumns = @JoinColumn(name = "user_id")
     )
     @JsonIgnore
-    private Set<SimpleUser> simpleUserJoin =  new LinkedHashSet<>();
+    private Set<SimpleUser> simpleUserJoin = new LinkedHashSet<>();
+
+    @Column(columnDefinition = "TEXT")
+    private String joinedUsersPlaces; // JSON string: {"userId1": places, "userId2": places}
+
 
 }

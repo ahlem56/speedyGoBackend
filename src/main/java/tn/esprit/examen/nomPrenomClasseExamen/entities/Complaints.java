@@ -20,8 +20,8 @@ public class Complaints {
     @NonNull
     private Date complaintCreationDate;
     @Enumerated(EnumType.STRING)
-    private ComplaintStatus complaintStatus = ComplaintStatus.pending;    private String Response;
-
+    private ComplaintStatus complaintStatus = ComplaintStatus.pending;
+    private String Response;
 
     @ManyToOne
     @JsonIgnore
