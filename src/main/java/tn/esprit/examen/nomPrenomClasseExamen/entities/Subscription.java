@@ -1,5 +1,6 @@
 package tn.esprit.examen.nomPrenomClasseExamen.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -9,6 +10,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -21,7 +23,7 @@ public class Subscription {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer SubscriptionId;
+    private Integer subscriptionId;
 
     @NotNull(message = "Subscription type is required")
     @Enumerated(EnumType.STRING)
@@ -35,6 +37,11 @@ public class Subscription {
     @Size(min = 4, message = "Description must have at least 4 characters")
     private String subscriptionDescription;
 
+    @NotNull(message = "Duration is required")
+    private Integer durationInMonths; // Duration in months (1, 3, 6, 12, etc.)
+
+
+    @JsonIgnore
     @OneToMany(mappedBy = "subscription", orphanRemoval = true)
     private Set<SimpleUser> simpleUsers = new LinkedHashSet<>();
 }

@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -19,6 +20,7 @@ public class SimpleUser extends User{
     private Integer partnerCodeSuser;
     private Boolean subscriptionSuser;
     private Integer carpolingDoneSuser;
+    private LocalDate subscriptionStartDate;
 
 
 

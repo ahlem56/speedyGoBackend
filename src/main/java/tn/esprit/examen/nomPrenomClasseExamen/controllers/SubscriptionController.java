@@ -12,6 +12,7 @@ import tn.esprit.examen.nomPrenomClasseExamen.services.SimpleUserService;
 import tn.esprit.examen.nomPrenomClasseExamen.services.SubscriptionService;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @AllArgsConstructor
@@ -33,7 +34,8 @@ public class SubscriptionController {
 
     @GetMapping("/getAllSubscriptions")
     public ResponseEntity<List<Subscription>> getAllSubscriptions() {
-        return new ResponseEntity<>(subscriptionService.getAllSubscriptions(), HttpStatus.OK);
+        List<Subscription> subscriptions = subscriptionService.getAllSubscriptions();
+        return ResponseEntity.ok(subscriptions);  // This should return a valid JSON array
     }
 
     @GetMapping("/getSubscription/{id}")
@@ -56,7 +58,7 @@ public class SubscriptionController {
     private final SimpleUserService simpleUserService;
 
     @PostMapping("/subscribeToSubscription/{userId}/{subscriptionId}")
-    public ResponseEntity<String> subscribeUser(@PathVariable Integer userId, @PathVariable Integer subscriptionId) {
+    public ResponseEntity<?> subscribeUser(@PathVariable Integer userId, @PathVariable Integer subscriptionId){
         try {
             // Fetch user and subscription
             Optional<SimpleUser> user = simpleUserService.getUserById(userId);
@@ -65,7 +67,7 @@ public class SubscriptionController {
             if (user.isPresent() && subscription.isPresent()) {
                 // Update the user with the subscription
                 simpleUserService.addSubscriptionToUser(userId, subscriptionId);
-                return ResponseEntity.ok("User subscribed successfully!");
+                return ResponseEntity.ok(Map.of("message", "User subscribed successfully!"));
             } else {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User or Subscription not found.");
             }
@@ -73,5 +75,22 @@ public class SubscriptionController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error subscribing user.");
         }
     }
+
+    @PostMapping("/triggerUnsubscribe")
+    public ResponseEntity<String> triggerUnsubscribe() {
+        subscriptionService.checkAndUnsubscribeUsers();  // Manually trigger the scheduled task
+        return ResponseEntity.ok("Unsubscription check completed!");
+    }
+
+    @GetMapping("/getSubscriptionForUser/{userId}")
+    public ResponseEntity<Subscription> getSubscriptionForUser(@PathVariable Integer userId) {
+        Optional<SimpleUser> user = simpleUserService.getUserById(userId);
+        if (user.isPresent() && user.get().getSubscription() != null) {
+            return ResponseEntity.ok(user.get().getSubscription());
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+
 
 }
