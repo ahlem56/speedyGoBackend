@@ -12,6 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Entity
@@ -54,5 +55,9 @@ public class Parcel {
     private boolean archived = false; // default false
 
 
+  //Damaged Parcel
+  private String damageImageUrl; // chemin de l'image stockée
+  private String damageDescription; // texte éventuellement saisi
+  private LocalDateTime damageReportedAt; // date du signalement
 }
 

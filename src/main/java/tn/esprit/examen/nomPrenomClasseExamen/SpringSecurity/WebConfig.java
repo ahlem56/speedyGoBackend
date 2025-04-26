@@ -27,6 +27,9 @@ public class WebConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/examen/user/upload-profile-photo/**")
                 .addResourceLocations("file:/path/to/uploads/");
+      // Serve les images des colis endommagés depuis le sous-dossier damaged-parcels
+      registry.addResourceHandler("/examen/parcel/{id}/report-damage/**")  // URL frontend pour accéder aux fichiers endommagés
+        .addResourceLocations("file:/path/to/uploads/damaged-parcels/");  // Chemin absolu vers le sous-dossier damaged-parcels
     }
 
     @Bean
