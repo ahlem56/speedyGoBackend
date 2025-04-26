@@ -34,9 +34,12 @@ public interface IParcelService {
   void markAsDelivered(Long parcelId) throws Exception;
   List<Parcel> archiveDeliveredParcels();
   List<Parcel> getParcelsByStatus(Status status);  // Méthode pour récupérer les colis par statut
-  Map<String, Float> calculateYearlyRevenue();  // Méthode pour obtenir le revenu de chaque mois
+  //Map<String, Float> calculateYearlyRevenue();  // Méthode pour obtenir le revenu de chaque mois
 
   public Parcel findParcelById(Integer parcelId) ;
+
+  Map<String, Float> calculateYearlyRevenue();
+
   public Parcel save(Parcel parcel) ;
   public List<Parcel> searchParcelsForDriver(Long driverId, String departure, String destination) ;
 

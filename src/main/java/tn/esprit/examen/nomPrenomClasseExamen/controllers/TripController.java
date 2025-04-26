@@ -109,7 +109,10 @@ public class TripController {
         return ResponseEntity.ok(trip);
     }
 
-
+    @GetMapping("/getTripsByVehicle/{vehicleId}")
+    public List<Trip> getTripsByVehicle(@PathVariable Integer vehicleId) {
+        return tripService.getTripsByVehicle(vehicleId);
+    }
 
     }
 

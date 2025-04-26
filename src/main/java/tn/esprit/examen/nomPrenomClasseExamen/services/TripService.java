@@ -42,8 +42,6 @@ public class TripService implements ITripService{
         }
 
 
-
-
         trip.setSimpleUser(simpleUser);
         trip.setDriver(driver);
 
@@ -106,6 +104,11 @@ public class TripService implements ITripService{
 
     public List<Trip> findTripsBySimpleUser(SimpleUser user) {
         return tripRepository.findTripsBySimpleUser(user);
+    }
+
+    // in TripService.java
+    public List<Trip> getTripsByVehicle(Integer vehicleId) {
+        return tripRepository.findByDriverVehicleVehiculeId(vehicleId);
     }
 
 }

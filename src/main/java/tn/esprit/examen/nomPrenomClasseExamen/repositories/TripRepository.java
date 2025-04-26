@@ -17,6 +17,6 @@ public interface TripRepository extends JpaRepository<Trip, Integer> {
     @Query("SELECT t FROM Trip t WHERE t.tripDate BETWEEN :startDate AND :endDate")
     List<Trip> findTripsByDateRange(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
     List<Trip> findTripsBySimpleUser(SimpleUser simpleUser);
-
+    List<Trip> findByDriverVehicleVehiculeId(Integer VehiculeId);
 
 }
