@@ -7,7 +7,9 @@ import tn.esprit.examen.nomPrenomClasseExamen.entities.LocationRecord;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.Vehicle;
 import tn.esprit.examen.nomPrenomClasseExamen.services.VehicleService;
 
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 @AllArgsConstructor
 @RequestMapping("/vehicle")
@@ -64,4 +66,23 @@ public class VehicleController {
     public List<LocationRecord> getTravelHistory(@PathVariable Integer vehicleId) {
         return vehicleService.getTravelHistory(vehicleId);
     }
+
+    @GetMapping("/trip-coordinates/{tripId}")
+    public Map<String, String> getTripCoordinates(@PathVariable Integer tripId) {
+        return vehicleService.getTripDepartureAndDestination(tripId);
+    }
+
+    @GetMapping("/vehicles/expired-insurance")
+    public List<Vehicle> getVehiclesWithExpiredInsurance() {
+        List<Vehicle> allVehicles = vehicleService.getAllVehicles();
+        Date today = new Date();
+
+        return allVehicles.stream()
+                .filter(vehicle -> Boolean.TRUE.equals(vehicle.getVehiculeInsuranceStatus())
+                        && vehicle.getVehiculeInsuranceDate() != null
+                        && vehicle.getVehiculeInsuranceDate().before(today))
+                .toList();
+    }
+
+
 }
