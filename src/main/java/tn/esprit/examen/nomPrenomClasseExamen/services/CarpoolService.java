@@ -12,6 +12,7 @@ import tn.esprit.examen.nomPrenomClasseExamen.repositories.CarpoolRepository;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.SimpleUserRepository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -24,14 +25,31 @@ public class CarpoolService implements ICarpoolService {
     private SimpleUserRepository simpleUserRepository;
     private UserActivityService userActivityService;
     private CarpoolVisibilityService carpoolVisibilityService;
+    private NotificationService notificationService;
+
     private ObjectMapper objectMapper;
 
     @Override
     public Carpool ajouterCarpoolEtAffecterUser(Carpool carpool, Integer offerId) {
         SimpleUser offer = simpleUserRepository.findById(offerId)
                 .orElseThrow(() -> new RuntimeException("User not found!"));
+
+        // Check if user has created more than 4 carpools
+        if (offer.getCarpolingDoneSuser() >= 4 && offer.getSubscription() == null) {
+            throw new RuntimeException("You have reached the limit of 4 carpool offers. A subscription is required to create more offers.");
+        }
+
+        // Associate the user with the carpool
         carpool.setSimpleUserOffer(offer);
-        return carpoolRepository.save(carpool);
+
+        // Save the carpool
+        Carpool savedCarpool = carpoolRepository.save(carpool);
+
+        // Increment carpoolingDoneSuser
+        offer.setCarpolingDoneSuser(offer.getCarpolingDoneSuser() + 1);
+        simpleUserRepository.save(offer);
+
+        return savedCarpool;
     }
 
     @Override
@@ -66,19 +84,46 @@ public class CarpoolService implements ICarpoolService {
         carpool.setCarpoolCapacity(carpool.getCarpoolCapacity() - numberOfPlaces);
         updateCarpoolStatus(carpool);
         carpoolRepository.save(carpool);
-
+        notificationService.sendCarpoolJoinNotification(carpool, user);
         userActivityService.addPointsForJoin(user);
         return carpool;
     }
 
     @Override
     public void deleteCarpool(Integer carpoolId, Integer offerId) {
+        // Retrieve the carpool
         Carpool carpool = carpoolRepository.findById(carpoolId)
                 .orElseThrow(() -> new RuntimeException("Carpool not found"));
+
+        // Verify that the user is the owner of the carpool
         if (!carpool.getSimpleUserOffer().getUserId().equals(offerId)) {
             throw new RuntimeException("You are not authorized to delete this carpool");
         }
+
+        // Get the user who created the carpool
+        SimpleUser offer = carpool.getSimpleUserOffer();
+
+        // Fetch joined users before deletion
+        Set<SimpleUser> joinedUsers = carpool.getSimpleUserJoin();
+        System.out.println("Joined users for carpool " + carpoolId + ": " + joinedUsers.size() + " users"); // Debug
+        joinedUsers.forEach(user -> System.out.println("Joined user ID: " + user.getUserId())); // Debug
+
+        // Delete the carpool
         carpoolRepository.delete(carpool);
+
+        // Decrement carpoolingDoneSuser, ensuring it doesn't go below 0
+        if (offer.getCarpolingDoneSuser() > 0) {
+            offer.setCarpolingDoneSuser(offer.getCarpolingDoneSuser() - 1);
+            simpleUserRepository.save(offer);
+        }
+
+        // Send notifications if there are joined users
+        if (!joinedUsers.isEmpty()) {
+            System.out.println("Sending CARPOOL_DELETED notifications for carpool " + carpoolId); // Debug
+            notificationService.sendCarpoolDeletedNotification(carpool, joinedUsers);
+        } else {
+            System.out.println("No joined users for carpool " + carpoolId + ", no notifications sent"); // Debug
+        }
     }
 
     @Override
@@ -110,6 +155,8 @@ public class CarpoolService implements ICarpoolService {
         carpool.setCarpoolCapacity(carpool.getCarpoolCapacity() + numberOfPlaces);
         updateCarpoolStatus(carpool);
         carpoolRepository.save(carpool);
+
+        notificationService.sendCarpoolLeaveNotification(carpool, user);
 
         userActivityService.deductPointsForCancel(user);
     }
@@ -218,7 +265,11 @@ public class CarpoolService implements ICarpoolService {
                     today, now, departure, destination, userId);
             matchingCarpools.stream()
                     .filter(carpool -> carpoolVisibilityService.isVisibleForUser(carpool, user))
-                    .forEach(allRecommended::add);
+                    .forEach(carpool -> {
+                        allRecommended.add(carpool);
+                        notificationService.sendRecommendedCarpoolNotification(user, carpool);
+                        log.info("Sent recommended carpool notification for userId: {}, carpoolId: {}", userId, carpool.getCarpoolId());
+                    });
         }
         return allRecommended;
     }
@@ -243,4 +294,189 @@ public class CarpoolService implements ICarpoolService {
             throw new RuntimeException("Error serializing joined users places");
         }
     }
+
+
+
+
+
+
+
+
+    @Override
+    public Carpool rateCarpoolOfferer(Integer carpoolId, Integer userId, Boolean liked) {
+        // Récupérer le covoiturage
+        Carpool carpool = carpoolRepository.findById(carpoolId)
+                .orElseThrow(() -> new RuntimeException("Carpool not found!"));
+
+        // Récupérer l'utilisateur
+        SimpleUser user = simpleUserRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found!"));
+
+        SimpleUser offerer = carpool.getSimpleUserOffer();
+
+        // Vérifications
+        if (!carpool.getSimpleUserJoin().contains(user)) {
+            throw new RuntimeException("You can only rate a carpool you joined!");
+        }
+        if (liked == null) {
+            throw new RuntimeException("Please specify if you liked the carpool!");
+        }
+        Map<Integer, Boolean> ratings = getRatings(carpool);
+        if (ratings.containsKey(userId)) {
+            throw new RuntimeException("You have already rated this carpool!");
+        }
+        LocalDate carpoolDate = carpool.getCarpoolDate();
+        LocalTime carpoolTime = carpool.getCarpoolTime();
+        if (!carpoolDate.atTime(carpoolTime).isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("Cannot rate a carpool that has not yet occurred!");
+        }
+
+        // Sauvegarder l'état initial pour rollback manuel si nécessaire
+        String originalRatings = carpool.getRatings();
+
+        // Ajouter la notation
+        ratings.put(userId, liked);
+        try {
+            setRatings(carpool, ratings);
+            carpoolRepository.save(carpool);
+        } catch (Exception e) {
+            // Rollback manuel
+            carpool.setRatings(originalRatings);
+            log.error("Failed to save carpool ratings", e);
+            throw new RuntimeException("Error saving carpool rating");
+        }
+
+        // Mettre à jour la moyenne de l'offreur
+        try {
+            calculateOffererAverageRating(offerer.getUserId());
+        } catch (Exception e) {
+            // Rollback manuel : supprimer la notation ajoutée
+            ratings.remove(userId);
+            setRatings(carpool, ratings);
+            carpoolRepository.save(carpool);
+            log.error("Failed to update offerer rating", e);
+            throw new RuntimeException("Error updating offerer rating");
+        }
+
+        log.info("User {} rated carpool {} with liked={}. Offerer {} rating updated.", userId, carpoolId, liked, offerer.getUserId());
+        return carpool;
+    }
+
+    @Override
+    public void calculateOffererAverageRating(Integer offererId) {
+        SimpleUser offerer = simpleUserRepository.findById(offererId)
+                .orElseThrow(() -> new RuntimeException("Offerer not found!"));
+        List<Carpool> offeredCarpools = carpoolRepository.findBySimpleUserOffer_UserId(offererId);
+
+        long totalRatings = 0;
+        long positiveRatings = 0;
+
+        for (Carpool carpool : offeredCarpools) {
+            Map<Integer, Boolean> ratings = getRatings(carpool);
+            totalRatings += ratings.size();
+            positiveRatings += ratings.values().stream().filter(Boolean::booleanValue).count();
+        }
+
+        Double previousAverageRating = offerer.getAverageRating();
+
+        try {
+            if (totalRatings > 0) {
+                double average = (double) positiveRatings / totalRatings * 100; // Pourcentage de "Oui"
+                offerer.setAverageRating(average);
+            } else {
+                offerer.setAverageRating(null); // Pas de notes
+            }
+            simpleUserRepository.save(offerer);
+        } catch (Exception e) {
+            // Rollback manuel
+            offerer.setAverageRating(previousAverageRating);
+            simpleUserRepository.save(offerer);
+            log.error("Failed to save offerer average rating", e);
+            throw new RuntimeException("Error saving offerer average rating");
+        }
+    }
+
+    @Override
+    public String getOffererRating(Integer offererId) {
+        SimpleUser offerer = simpleUserRepository.findById(offererId)
+                .orElseThrow(() -> new RuntimeException("Offerer not found!"));
+        Double averageRating = offerer.getAverageRating();
+        if (averageRating == null) {
+            return "Not Rated";
+        }
+        return String.format("%.0f%%", averageRating);
+    }
+
+    @Override
+    public List<Map<Integer, Boolean>> getCarpoolRatings(Integer carpoolId) {
+        Carpool carpool = carpoolRepository.findById(carpoolId)
+                .orElseThrow(() -> new RuntimeException("Carpool not found!"));
+        Map<Integer, Boolean> ratings = getRatings(carpool);
+        List<Map<Integer, Boolean>> result = new ArrayList<>();
+        ratings.forEach((userId, liked) -> {
+            Map<Integer, Boolean> rating = new HashMap<>();
+            rating.put(userId, liked);
+            result.add(rating);
+        });
+        return result;
+    }
+
+    private Map<Integer, Boolean>getRatings(Carpool carpool) {
+        try {
+            if (carpool.getRatings() == null || carpool.getRatings().isEmpty()) {
+                return new HashMap<>();
+            }
+            return objectMapper.readValue(carpool.getRatings(), new TypeReference<Map<Integer, Boolean>>() {});
+        } catch (Exception e) {
+            log.error("Failed to parse ratings", e);
+            throw new RuntimeException("Error parsing ratings");
+        }
+    }
+
+    private void setRatings(Carpool carpool, Map<Integer, Boolean> ratings) {
+        try {
+            carpool.setRatings(ratings.isEmpty() ? null : objectMapper.writeValueAsString(ratings));
+        } catch (Exception e) {
+            log.error("Failed to serialize ratings", e);
+            throw new RuntimeException("Error serializing ratings");
+        }
+    }
+
+
+
+    //dashboard
+    @Override
+    public long getTotalCarpools() {
+        System.out.println("Fetching total number of carpools");
+        return carpoolRepository.count();
+    }
+
+
+    @Override
+    public List<Map<String, Object>> getTopRatedOfferers(int limit) {
+        System.out.println("Fetching top " + limit + " rated carpool offerers");
+        List<SimpleUser> offerers = simpleUserRepository.findByAverageRatingIsNotNull();
+        if (offerers.isEmpty()) {
+            System.out.println("No users with average ratings found");
+            return Collections.emptyList();
+        }
+        List<Map<String, Object>> result = offerers.stream()
+                .filter(user -> !carpoolRepository.findBySimpleUserOffer_UserId(user.getUserId()).isEmpty())
+                .sorted(Comparator.comparing(SimpleUser::getAverageRating, Comparator.nullsLast(Comparator.reverseOrder())))
+                .limit(limit)
+                .map(user -> {
+                    Map<String, Object> offerer = new HashMap<>();
+                    offerer.put("userId", user.getUserId());
+                    offerer.put("firstName", user.getUserFirstName());
+                    offerer.put("lastName", user.getUserLastName());
+                    offerer.put("name", user.getUserFirstName() + " " + user.getUserLastName()); // Concatenated name
+                    offerer.put("averageRating", user.getAverageRating());
+                    return offerer;
+                })
+                .collect(Collectors.toList());
+        System.out.println("Found " + result.size() + " top rated offerers");
+        return result;
+    }
+
+
 }

@@ -30,7 +30,8 @@ public class SimpleUser extends User{
 
     private LocalDate subscriptionStartDate;
 
-
+    @Column(nullable = true)
+    private Double averageRating; // Pourcentage de "Oui" ou null si aucune notation
 
     @OneToMany(mappedBy = "simpleUserOffer")
 
@@ -74,4 +75,3 @@ public class SimpleUser extends User{
 
 
 }
-

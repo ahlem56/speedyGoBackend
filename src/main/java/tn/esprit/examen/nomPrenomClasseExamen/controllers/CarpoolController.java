@@ -9,6 +9,7 @@ import tn.esprit.examen.nomPrenomClasseExamen.entities.SimpleUser;
 import tn.esprit.examen.nomPrenomClasseExamen.services.CarpoolService;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/carpools")
@@ -101,5 +102,70 @@ public class CarpoolController {
         return carpoolService.getOrderedRecommendedCarpools(userId);
     }
 
-}
 
+
+
+
+
+
+    @PostMapping("/rate")
+    public Carpool rateCarpool(@RequestBody RateCarpoolRequest request) {
+        return carpoolService.rateCarpoolOfferer(
+                request.getCarpoolId(),
+                request.getUserId(),
+                request.getLiked()
+        );
+    }
+
+
+
+    @GetMapping("/{carpoolId}/ratings")
+    public List<Map<Integer, Boolean>> getCarpoolRatings(@PathVariable Integer carpoolId) {
+        return carpoolService.getCarpoolRatings(carpoolId);
+    }
+
+    @GetMapping("/offerer/{offererId}/rating")
+    public String getOffererRating(@PathVariable Integer offererId) {
+        return carpoolService.getOffererRating(offererId);
+    }
+
+    @GetMapping("/count")
+    public long getTotalCarpools() {
+        return carpoolService.getTotalCarpools();
+    }
+
+    @GetMapping("/top-rated-offerers")
+    public List<Map<String, Object>> getTopRatedOfferers() {
+        return carpoolService.getTopRatedOfferers(3);
+    }
+    // Classe DTO pour la requête JSON
+    static class RateCarpoolRequest {
+        private Integer carpoolId;
+        private Integer userId;
+        private Boolean liked;
+
+        // Getters et Setters
+        public Integer getCarpoolId() {
+            return carpoolId;
+        }
+
+        public void setCarpoolId(Integer carpoolId) {
+            this.carpoolId = carpoolId;
+        }
+
+        public Integer getUserId() {
+            return userId;
+        }
+
+        public void setUserId(Integer userId) {
+            this.userId = userId;
+        }
+
+        public Boolean getLiked() {
+            return liked;
+        }
+
+        public void setLiked(Boolean liked) {
+            this.liked = liked;
+        }
+    }}

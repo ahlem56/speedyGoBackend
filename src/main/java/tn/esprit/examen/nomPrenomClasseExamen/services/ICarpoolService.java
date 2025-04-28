@@ -5,6 +5,7 @@ import tn.esprit.examen.nomPrenomClasseExamen.entities.CarpoolStatus;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.SimpleUser;
 
 import java.util.List;
+import java.util.Map;
 
 public interface ICarpoolService {
 
@@ -25,4 +26,13 @@ public interface ICarpoolService {
 
     public List<Carpool> getFutureCarpools(Integer userId) ;
 
+
+
+    Carpool rateCarpoolOfferer(Integer carpoolId, Integer userId, Boolean liked);
+    void calculateOffererAverageRating(Integer offererId);
+    String getOffererRating(Integer offererId);
+
+    List<Map<Integer, Boolean>> getCarpoolRatings(Integer carpoolId);
+    public long getTotalCarpools();
+    public List<Map<String, Object>> getTopRatedOfferers(int limit) ;
 }

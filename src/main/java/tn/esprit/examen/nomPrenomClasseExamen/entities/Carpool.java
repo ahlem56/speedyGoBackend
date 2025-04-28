@@ -55,4 +55,7 @@ public class Carpool {
     private String joinedUsersPlaces; // JSON string: {"userId1": places, "userId2": places}
 
 
+    @Column(columnDefinition = "TEXT")
+    private String ratings; // JSON string: {"userId1": true, "userId2": false}
+
 }

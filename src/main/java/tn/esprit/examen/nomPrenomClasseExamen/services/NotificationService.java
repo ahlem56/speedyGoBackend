@@ -9,10 +9,8 @@ import tn.esprit.examen.nomPrenomClasseExamen.controllers.NotificationController
 import tn.esprit.examen.nomPrenomClasseExamen.entities.*;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.NotificationRepository;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.Instant;
+import java.util.*;
 
 @Service
 public class NotificationService {
@@ -101,31 +99,165 @@ public class NotificationService {
         );
         notificationController.sendNotificationToClients(message);  // This sends the message to all connected users
     }
-  //  Envoie une notification quand un colis est expédié
-  public void sendParcelShippedNotification(Parcel parcel) {
-    SimpleUser user = parcel.getSimpleUser(); // 🔁 Assure-toi que getCreatedBy() renvoie bien un SimpleUser
+    //  Envoie une notification quand un colis est expédié
+    public void sendParcelShippedNotification(Parcel parcel) {
+        SimpleUser user = parcel.getSimpleUser(); // 🔁 Assure-toi que getCreatedBy() renvoie bien un SimpleUser
 
-    Map<String, Object> message = new HashMap<>();
-    message.put("type", "PARCEL_SHIPPED");
-    message.put("message", String.format(
-      "Your parcel to %s has been shipped!",
-      parcel.getParcelDestination()
-    ));
-    message.put("details", Map.of(
-      "parcelId", parcel.getParcelId(),
-      "destination", parcel.getParcelDestination(),
-      "status", parcel.getStatus().toString()
-    ));
-    message.put("timestamp", new Date());
+        Map<String, Object> message = new HashMap<>();
+        message.put("type", "PARCEL_SHIPPED");
+        message.put("message", String.format(
+                "Your parcel to %s has been shipped!",
+                parcel.getParcelDestination()
+        ));
+        message.put("details", Map.of(
+                "parcelId", parcel.getParcelId(),
+                "destination", parcel.getParcelDestination(),
+                "status", parcel.getStatus().toString()
+        ));
+        message.put("timestamp", new Date());
 
-    try {
-      String jsonMessage = new ObjectMapper().writeValueAsString(message);
-      createNotification(jsonMessage, user);
-      notificationController.sendNotificationToClients(jsonMessage);
-    } catch (JsonProcessingException e) {
-      e.printStackTrace();
+        try {
+            String jsonMessage = new ObjectMapper().writeValueAsString(message);
+            createNotification(jsonMessage, user);
+            notificationController.sendNotificationToClients(jsonMessage);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
     }
-  }
+
+
+
+
+
+
+
+
+
+
+
+
+    // Send notification to carpool offerer when a user joins
+    public void sendCarpoolJoinNotification(Carpool carpool, SimpleUser joiningUser) {
+        SimpleUser offerer = carpool.getSimpleUserOffer();
+        Map<String, Object> message = new HashMap<>();
+        message.put("type", "CARPOOL_JOINED");
+        message.put("message", String.format(
+                "%s %s has joined your carpool from %s to %s!",
+                joiningUser.getUserFirstName(),
+                joiningUser.getUserLastName(),
+                carpool.getCarpoolDeparture(),
+                carpool.getCarpoolDestination()
+        ));
+        message.put("details", Map.of(
+                "carpoolId", carpool.getCarpoolId(),
+                "departure", carpool.getCarpoolDeparture(),
+                "destination", carpool.getCarpoolDestination(),
+                "date", carpool.getCarpoolDate().toString(),
+                "time", carpool.getCarpoolTime().toString(),
+                "userId", joiningUser.getUserId()
+        ));
+        message.put("timestamp", new Date());
+
+        try {
+            String jsonMessage = new ObjectMapper().writeValueAsString(message);
+            createNotification(jsonMessage, offerer);
+            notificationController.sendNotificationToUser(jsonMessage, offerer.getUserId());
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Send notification to carpool offerer when a user leaves (cancels)
+    public void sendCarpoolLeaveNotification(Carpool carpool, SimpleUser leavingUser) {
+        SimpleUser offerer = carpool.getSimpleUserOffer();
+        Map<String, Object> message = new HashMap<>();
+        message.put("type", "CARPOOL_LEFT");
+        message.put("message", String.format(
+                "%s %s has left your carpool from %s to %s.",
+                leavingUser.getUserFirstName(),
+                leavingUser.getUserLastName(),
+                carpool.getCarpoolDeparture(),
+                carpool.getCarpoolDestination()
+        ));
+        message.put("details", Map.of(
+                "carpoolId", carpool.getCarpoolId(),
+                "departure", carpool.getCarpoolDeparture(),
+                "destination", carpool.getCarpoolDestination(),
+                "date", carpool.getCarpoolDate().toString(),
+                "time", carpool.getCarpoolTime().toString(),
+                "userId", leavingUser.getUserId()
+        ));
+        message.put("timestamp", new Date());
+
+        try {
+            String jsonMessage = new ObjectMapper().writeValueAsString(message);
+            createNotification(jsonMessage, offerer);
+            notificationController.sendNotificationToUser(jsonMessage, offerer.getUserId());
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Send notification to joined users when a carpool is deleted
+    public void sendCarpoolDeletedNotification(Carpool carpool, Set<SimpleUser> joinedUsers) {
+        for (SimpleUser user : joinedUsers) {
+            System.out.println("Preparing CARPOOL_DELETED notification for user " + user.getUserId()); // Debug
+            Map<String, Object> message = new HashMap<>();
+            message.put("type", "CARPOOL_DELETED");
+            message.put("message", String.format(
+                    "The carpool from %s to %s has been deleted by the offerer.",
+                    carpool.getCarpoolDeparture(),
+                    carpool.getCarpoolDestination()
+            ));
+            message.put("details", Map.of(
+                    "carpoolId", carpool.getCarpoolId(),
+                    "departure", carpool.getCarpoolDeparture(),
+                    "destination", carpool.getCarpoolDestination(),
+                    "date", carpool.getCarpoolDate().toString(),
+                    "time", carpool.getCarpoolTime().toString()
+            ));
+            message.put("timestamp", Instant.now().toString()); // Use ISO string for consistency
+
+            try {
+                String jsonMessage = new ObjectMapper().writeValueAsString(message);
+                System.out.println("Sending CARPOOL_DELETED to user " + user.getUserId() + ": " + jsonMessage); // Debug
+                createNotification(jsonMessage, user);
+                notificationController.sendNotificationToUser(jsonMessage, user.getUserId());
+            } catch (JsonProcessingException e) {
+                System.err.println("Error serializing CARPOOL_DELETED for user " + user.getUserId() + ": " + e.getMessage()); // Debug
+                e.printStackTrace();
+            }
+        }
+    }
+
+    // Send notification to user about a recommended carpool
+    public void sendRecommendedCarpoolNotification(SimpleUser user, Carpool carpool) {
+        Map<String, Object> message = new HashMap<>();
+        message.put("type", "CARPOOL_RECOMMENDED");
+        message.put("message", String.format(
+                "We found a recommended carpool for you from %s to %s!",
+                carpool.getCarpoolDeparture(),
+                carpool.getCarpoolDestination()
+        ));
+        message.put("details", Map.of(
+                "carpoolId", carpool.getCarpoolId(),
+                "departure", carpool.getCarpoolDeparture(),
+                "destination", carpool.getCarpoolDestination(),
+                "date", carpool.getCarpoolDate().toString(),
+                "time", carpool.getCarpoolTime().toString(),
+                "price", carpool.getCarpoolPrice(),
+                "capacity", carpool.getCarpoolCapacity()
+        ));
+        message.put("timestamp", new Date());
+
+        try {
+            String jsonMessage = new ObjectMapper().writeValueAsString(message);
+            createNotification(jsonMessage, user);
+            notificationController.sendNotificationToUser(jsonMessage, user.getUserId());
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+    }
 
 
     public List<Notification> getAllNotificationsForUser(SimpleUser user) {
