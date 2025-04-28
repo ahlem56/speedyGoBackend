@@ -15,6 +15,7 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(name = "simple_user")
 public class SimpleUser extends User{
     private Integer partnerCodeSuser;
     private Boolean subscriptionSuser;

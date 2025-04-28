@@ -46,8 +46,8 @@ public class Trip {
     @DecimalMin("-180.0")
     @DecimalMax("180.0")
     private BigDecimal longitude;
-    private boolean readyForDriverRating; // Indicates if driver can rate passenger
-    private boolean readyForPassengerRating; // Indicates if passenger can rate driver
+    private Boolean readyForDriverRating; // Indicates if driver can rate passenger
+    private Boolean readyForPassengerRating; // Indicates if passenger can rate driver
 
     @NotNull
     @Min(value = 1, message = "Number of passengers must be at least 1")
@@ -56,7 +56,7 @@ public class Trip {
     private Integer numberOfPassengers = 1;
 
     @Column(name = "is_rated")
-    private boolean isRated = false;  // Default value is false
+    private Boolean isRated = false; // Default value is false
 
 
     @ManyToOne

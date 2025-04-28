@@ -22,6 +22,7 @@ public class PaymentRequestDTO {
 
     @NotNull
     private PaymentMethod  paymentMethod;
+    private Integer userId;
 
     private String stripePaymentMethodId;
 

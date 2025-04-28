@@ -15,10 +15,12 @@ import tn.esprit.examen.nomPrenomClasseExamen.DTO.PaymentRequestDTO;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.Parcel;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.Payment;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.Trip;
+import tn.esprit.examen.nomPrenomClasseExamen.entities.SimpleUser;
 import tn.esprit.examen.nomPrenomClasseExamen.exceptions.ResourceNotFoundException;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.ParcelRepository;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.PaymentRepository;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.TripRepository;
+import tn.esprit.examen.nomPrenomClasseExamen.repositories.SimpleUserRepository;
 import tn.esprit.examen.nomPrenomClasseExamen.services.PaymentService;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.PaymentMethod;
 
@@ -37,6 +39,7 @@ public class PaymentController {
     private final TripRepository tripRepository;
     private final ParcelRepository parcelRepository;
     private final PaymentRepository paymentRepository;
+    private final SimpleUserRepository simpleUserRepository;
 
     @GetMapping
     public ResponseEntity<List<Payment>> getAllPayments() {
@@ -116,30 +119,12 @@ public class PaymentController {
 
             PaymentIntent intent = PaymentIntent.create(params);
 
-            Payment payment = new Payment();
-            payment.setPaymentAmount(paymentRequest.getPaymentAmount());
-            System.out.println("🧪 Payment Method DTO: " + paymentRequest.getPaymentMethod());
-            System.out.println("🧪 Stripe ID: " + paymentRequest.getStripePaymentMethodId());
-            System.out.println("🧪 Amount: " + paymentRequest.getPaymentAmount());
-            payment.setPaymentMethod(paymentRequest.getPaymentMethod());
-            payment.setPaymentDate(paymentRequest.getPaymentDate());
-            payment.setLastUpdated(new Date());
-            payment.setStripeChargeId(intent.getId());
+            // Set the Stripe payment ID in the request
+            paymentRequest.setStripePaymentMethodId(intent.getId());
 
-            if (paymentRequest.getTripId() != null) {
-                Trip trip = tripRepository.findById(paymentRequest.getTripId())
-                        .orElseThrow(() -> new ResourceNotFoundException("Trip not found"));
-                payment.setTrip(trip);
-            }
-
-            if (paymentRequest.getParcelId() != null) {
-                Parcel parcel = parcelRepository.findById(paymentRequest.getParcelId())
-                        .orElseThrow(() -> new ResourceNotFoundException("Parcel not found"));
-                payment.setParcel(parcel);
-            }
-
-            Payment savedPayment = paymentRepository.save(payment);
-            return ResponseEntity.status(HttpStatus.CREATED).body(savedPayment);
+            // Use the PaymentService to process the payment
+            Payment payment = paymentService.processPayment(paymentRequest);
+            return ResponseEntity.status(HttpStatus.CREATED).body(payment);
 
         } catch (StripeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)

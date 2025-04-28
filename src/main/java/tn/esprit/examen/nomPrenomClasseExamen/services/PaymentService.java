@@ -10,9 +10,7 @@ import org.springframework.stereotype.Service;
 import tn.esprit.examen.nomPrenomClasseExamen.DTO.PaymentRequestDTO;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.*;
 
-import tn.esprit.examen.nomPrenomClasseExamen.repositories.ParcelRepository;
-import tn.esprit.examen.nomPrenomClasseExamen.repositories.PaymentRepository;
-import tn.esprit.examen.nomPrenomClasseExamen.repositories.TripRepository;
+import tn.esprit.examen.nomPrenomClasseExamen.repositories.*;
 import com.stripe.param.PaymentIntentCreateParams;
 import com.stripe.model.PaymentIntent;
 
@@ -28,15 +26,21 @@ public class PaymentService implements IPaymentService {
     private final PaymentRepository paymentRepository;
     private final TripRepository tripRepository;
     private final ParcelRepository parcelRepository;
+    private final UserRepository userRepository;
+    private final SimpleUserRepository simpleUserRepository;
+
+
     @PostConstruct
     public void init() {
         Stripe.apiKey = "sk_test_51Qx4HqRtzrEMIcCe68S8vL8kuWICgv7rI2hga1OI7oDdcv9aRamQbSMmsYI5qLFG0oSWq9KyoblmZgL2TIAUuBMc00jPaF2SSB"; // ✅ Use your secret key
     }
 
-    public PaymentService(PaymentRepository paymentRepository, TripRepository tripRepository, ParcelRepository parcelRepository) {
+    public PaymentService(PaymentRepository paymentRepository,SimpleUserRepository simpleUserRepository, TripRepository tripRepository,UserRepository userRepository, ParcelRepository parcelRepository) {
         this.paymentRepository = paymentRepository;
         this.tripRepository = tripRepository;
         this.parcelRepository = parcelRepository;
+        this.userRepository = userRepository;
+        this.simpleUserRepository = simpleUserRepository;
         Stripe.apiKey = "sk_test_51Qx4HqRtzrEMIcCe68S8vL8kuWICgv7rI2hga1OI7oDdcv9aRamQbSMmsYI5qLFG0oSWq9KyoblmZgL2TIAUuBMc00jPaF2SSB";
     }
 
@@ -225,35 +229,76 @@ public class PaymentService implements IPaymentService {
         return intent.getClientSecret();
     }
 
-    public Payment processPayment(PaymentRequestDTO request) {
-        Payment payment = Payment.builder()
-                .paymentAmount(request.getPaymentAmount())
-                .paymentMethod(request.getPaymentMethod())
-                .paymentDate(new Date())
-                .lastUpdated(new Date())
-                .stripeChargeId(request.getStripePaymentMethodId()) // Optional: store PM ID
-                .build();
 
-        // ✅ Associate with Trip
+    public Payment processPayment(PaymentRequestDTO request) {
+        log.info("🧪 Payment Method DTO: {}", request.getPaymentMethod());
+        log.info("🧪 Stripe ID: {}", request.getStripePaymentMethodId());
+        log.info("🧪 Amount: {}", request.getPaymentAmount());
+        log.info("🧪 User ID received: {}", request.getUserId());
+        log.info("🧪 Trip ID received: {}", request.getTripId());
+
+        Payment payment = new Payment();
+        payment.setPaymentAmount(request.getPaymentAmount());
+        payment.setPaymentMethod(request.getPaymentMethod());
+        payment.setPaymentDate(new Date());
+        payment.setLastUpdated(new Date());
+        payment.setStripeChargeId(request.getStripePaymentMethodId());
+
+        // 🛠️ FIRST: Manual user assignment (priority)
+        if (request.getUserId() != null) {
+            log.info("🔍 Looking for SimpleUser with ID: {}", request.getUserId());
+            SimpleUser user = simpleUserRepository.findById(request.getUserId())
+                    .orElseThrow(() -> new RuntimeException("SimpleUser not found with ID: " + request.getUserId()));
+            log.info("✅ Found SimpleUser: {} {}", user.getUserFirstName(), user.getUserLastName());
+            payment.setUser(user);
+            log.info("✅ Set user in payment: {} {}", payment.getUser().getUserFirstName(), payment.getUser().getUserLastName());
+        } else {
+            log.warn("⚠️ No user ID provided in payment request");
+        }
+
+        // ✅ THEN: Associate Trip if exists
         if (request.getTripId() != null) {
             Trip trip = tripRepository.findById(request.getTripId())
                     .orElseThrow(() -> new RuntimeException("Trip not found with ID: " + request.getTripId()));
             payment.setTrip(trip);
 
-            // ✅ Get the simple user from trip and assign the partner
-            if (trip.getSimpleUser() != null && trip.getSimpleUser().getPartners() != null) {
-                payment.setPartner(trip.getSimpleUser().getPartners());
+            if (trip.getSimpleUser() != null && payment.getUser() == null) { // Only if user is still null
+                SimpleUser simpleUserFromTrip = trip.getSimpleUser();
+                payment.setUser(simpleUserFromTrip);
+                log.info("✅ Set user from trip: {} {}", simpleUserFromTrip.getUserFirstName(), simpleUserFromTrip.getUserLastName());
+
+                if (simpleUserFromTrip.getPartners() != null) {
+                    payment.setPartner(simpleUserFromTrip.getPartners());
+                }
             }
         }
 
-        // ✅ Associate with Parcel (optional)
+        // ✅ Optional: Associate Parcel if needed
         if (request.getParcelId() != null) {
             Parcel parcel = parcelRepository.findById(request.getParcelId())
                     .orElseThrow(() -> new RuntimeException("Parcel not found with ID: " + request.getParcelId()));
             payment.setParcel(parcel);
         }
 
-        return paymentRepository.save(payment);
+        // ✅ Safe saving with explicit user check
+        try {
+            log.info("🔍 Final payment user before save: {}", 
+                payment.getUser() != null ? 
+                payment.getUser().getUserFirstName() + " " + payment.getUser().getUserLastName() : 
+                "null");
+            
+            Payment savedPayment = paymentRepository.save(payment);
+            
+            log.info("✅ Saved payment with user: {}", 
+                savedPayment.getUser() != null ? 
+                savedPayment.getUser().getUserFirstName() + " " + savedPayment.getUser().getUserLastName() : 
+                "null");
+            
+            return savedPayment;
+        } catch (Exception e) {
+            log.error("💥 Error while saving payment: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to save payment: " + e.getMessage(), e);
+        }
     }
 
 
