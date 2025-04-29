@@ -100,6 +100,8 @@ public class ParcelController {
   public double calculateParcelPrice(@RequestParam double weight) {
     return parcelService.determineParcelPrice(weight);
   }
+
+
   @GetMapping("/statistics")
   public Map<String, Long> getParcelStatistics(@RequestParam String date) throws ParseException {
     // Convertir la chaîne en Date (format: yyyy-MM-dd)

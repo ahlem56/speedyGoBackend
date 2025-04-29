@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import tn.esprit.examen.nomPrenomClasseExamen.controllers.NotificationController;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.*;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.NotificationRepository;
+import tn.esprit.examen.nomPrenomClasseExamen.repositories.SimpleUserRepository;
 
 import java.time.Instant;
 import java.util.*;
@@ -16,11 +17,13 @@ import java.util.*;
 public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final NotificationController notificationController;
+    private final SimpleUserRepository simpleUserRepository;
 
     @Autowired
-    public NotificationService(NotificationRepository notificationRepository, @Lazy NotificationController notificationController) {
+    public NotificationService(NotificationRepository notificationRepository, @Lazy NotificationController notificationController, SimpleUserService simpleUserService, SimpleUserRepository simpleUserRepository) {
         this.notificationRepository = notificationRepository;
         this.notificationController = notificationController;
+        this.simpleUserRepository =simpleUserRepository;
     }
 
     // Save new notification
@@ -91,13 +94,34 @@ public class NotificationService {
 
     // Method to send event creation notifications to all users (this is the only scenario where all users receive notifications)
     public void sendEventCreationNotification(Event event) {
-        String message = String.format(
-                "{\"eventDescription\": \"%s\", \"eventDate\": \"%s\", \"eventLocation\": \"%s\"}",
-                event.getEventDescription(),
-                event.getEventDate(),
-                event.getEventLocation()
+        // 1. Get all users who should receive this notification
+        List<SimpleUser> allUsers = simpleUserRepository.findAll(); // Or use a more targeted query
+
+        // 2. Create and save notification for each user
+        for (SimpleUser user : allUsers) {
+            Map<String, Object> messageData = new HashMap<>();
+            messageData.put("eventDescription", event.getEventDescription());
+            messageData.put("eventDate", event.getEventDate().toString());
+            messageData.put("eventLocation", event.getEventLocation());
+            messageData.put("timestamp", new Date());
+
+            try {
+                String jsonMessage = new ObjectMapper().writeValueAsString(messageData);
+                createNotification(jsonMessage, user); // Save to DB for each user
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
+        }
+
+        // 3. Broadcast to all connected clients
+        notificationController.sendNotificationToClients(
+                String.format(
+                        "{\"eventDescription\": \"%s\", \"eventDate\": \"%s\", \"eventLocation\": \"%s\"}",
+                        event.getEventDescription(),
+                        event.getEventDate(),
+                        event.getEventLocation()
+                )
         );
-        notificationController.sendNotificationToClients(message);  // This sends the message to all connected users
     }
     //  Envoie une notification quand un colis est expédié
     public void sendParcelShippedNotification(Parcel parcel) {

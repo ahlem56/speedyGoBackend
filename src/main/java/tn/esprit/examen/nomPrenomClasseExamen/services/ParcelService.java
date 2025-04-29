@@ -153,9 +153,19 @@ public class ParcelService implements IParcelService {
 
   @Override
   public long getDeliveredParcelsByDay(Date date) {
-    return parcelRepository.countDeliveredParcelsByDay(date);
-  }
+    Calendar cal = Calendar.getInstance();
+    cal.setTime(date);
+    cal.set(Calendar.HOUR_OF_DAY, 0);
+    cal.set(Calendar.MINUTE, 0);
+    cal.set(Calendar.SECOND, 0);
+    cal.set(Calendar.MILLISECOND, 0);
+    Date startOfDay = cal.getTime();
 
+    cal.add(Calendar.DAY_OF_MONTH, 1);
+    Date endOfDay = cal.getTime();
+
+    return parcelRepository.countDeliveredParcelsByDay(startOfDay, endOfDay);
+  }
   @Override
   public long getDeliveredParcelsByWeek(Date date) {
     return parcelRepository.countDeliveredParcelsByWeek(date);

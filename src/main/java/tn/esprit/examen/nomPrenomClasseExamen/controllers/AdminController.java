@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.Admin;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.Driver;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.TripLocationDTO;
+import tn.esprit.examen.nomPrenomClasseExamen.repositories.ParcelRepository;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.UserRepository;
 import tn.esprit.examen.nomPrenomClasseExamen.services.IAdminService;
 
@@ -22,6 +23,7 @@ public class AdminController {
 
   private IAdminService adminService;
   private UserRepository userRepository;
+  private ParcelRepository parcelRepository;
 
   @PostMapping("/createAdmin")
   public Admin createAdmin(@RequestBody Admin admin) {
@@ -49,6 +51,12 @@ public class AdminController {
   public ResponseEntity<Map<String, BigDecimal>> getMonthlyRevenue() {
     Map<String, BigDecimal> monthlyRevenue = adminService.getMonthlyRevenue();
     return ResponseEntity.ok(monthlyRevenue);
+  }
+
+  @GetMapping("/total-parcels")
+  public ResponseEntity<Long> getTotalParcels() {
+    long totalParcels = parcelRepository.count();
+    return ResponseEntity.ok(totalParcels);
   }
 
 }

@@ -23,9 +23,19 @@ public interface ParcelRepository extends JpaRepository<Parcel, Integer> {
   // Nombre de colis livrés par jour
   // Nombre de livraisons par jour
   // Nombre de livraisons pour un jour donné
-  @Query("SELECT COUNT(p) FROM Parcel p WHERE DATE(p.parcelDate) = DATE(:date) AND p.status = 'DELIVERED'")
-  long countDeliveredParcelsByDay(@Param("date") Date date);
+  @Query(value = """
+    SELECT COUNT(*) FROM parcel 
+    WHERE parcel_date >= :startOfDay 
+    AND parcel_date < :endOfDay 
+    AND status = 'DELIVERED'
+    """, nativeQuery = true)
+  long countDeliveredParcelsByDay(
+          @Param("startOfDay") Date startOfDay,
+          @Param("endOfDay") Date endOfDay);
 
+  // Add this method to help debug
+  @Query(value = "SELECT p.parcel_id, p.parcel_date, p.status FROM parcel p WHERE DATE(p.parcel_date) = DATE(:date)", nativeQuery = true)
+  List<Object[]> debugParcelsByDate(@Param("date") Date date);
   // Nombre de livraisons pour la semaine actuelle
   @Query("SELECT COUNT(p) FROM Parcel p WHERE YEARWEEK(p.parcelDate) = YEARWEEK(:date) AND p.status = 'DELIVERED'")
   long countDeliveredParcelsByWeek(@Param("date") Date date);
