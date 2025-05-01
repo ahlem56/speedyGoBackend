@@ -384,4 +384,12 @@ public class ParcelService implements IParcelService {
       throw new RuntimeException("Error generating PDF: " + e.getMessage());
     }
   }
+  @Override
+  public double getDamagedParcelsPercentage() {
+    long total = parcelRepository.countAllParcels();
+    if (total == 0) return 0.0;
+
+    long damaged = parcelRepository.countDamagedParcels();
+    return ((double) damaged / total) * 100.0;
+  }
 }

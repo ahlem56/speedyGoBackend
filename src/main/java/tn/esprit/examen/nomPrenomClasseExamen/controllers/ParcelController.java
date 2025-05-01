@@ -244,6 +244,10 @@ public List<Parcel> getDamagedParcels() {
       .headers(headers)
       .body(pdfContent);
   }
+  @GetMapping("/statistics/damaged-percentage")
+  public double getDamagedParcelsPercentage() {
+    return parcelService.getDamagedParcelsPercentage();
+  }
 }
 
 

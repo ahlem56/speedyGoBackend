@@ -52,5 +52,6 @@ public interface IParcelService {
 
   //pdf
   byte[] generateParcelPdf(Integer parcelId);
+  double getDamagedParcelsPercentage();
 
 }

@@ -24,9 +24,9 @@ public interface ParcelRepository extends JpaRepository<Parcel, Integer> {
   // Nombre de livraisons par jour
   // Nombre de livraisons pour un jour donné
   @Query(value = """
-    SELECT COUNT(*) FROM parcel 
-    WHERE parcel_date >= :startOfDay 
-    AND parcel_date < :endOfDay 
+    SELECT COUNT(*) FROM parcel
+    WHERE parcel_date >= :startOfDay
+    AND parcel_date < :endOfDay
     AND status = 'DELIVERED'
     """, nativeQuery = true)
   long countDeliveredParcelsByDay(
@@ -46,5 +46,9 @@ public interface ParcelRepository extends JpaRepository<Parcel, Integer> {
   List<Parcel> findByStatusAndArchivedFalse(Status status);
   List<Parcel> findByStatus(Status status);  // Méthode pour récupérer les colis par statut
   List<Parcel> findByDamageImageUrlIsNotNull();  // Fetch parcels with damage reported
+  @Query("SELECT COUNT(p) FROM Parcel p")
+  long countAllParcels();
 
+  @Query("SELECT COUNT(p) FROM Parcel p WHERE p.damageImageUrl IS NOT NULL")
+  long countDamagedParcels();
 }
