@@ -1,5 +1,8 @@
 package tn.esprit.examen.nomPrenomClasseExamen.services;
 
+import com.itextpdf.text.*;
+import com.itextpdf.text.pdf.PdfWriter;
+import com.itextpdf.text.pdf.draw.LineSeparator;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,13 +15,15 @@ import tn.esprit.examen.nomPrenomClasseExamen.repositories.DriverRepository;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.ParcelRepository;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.SimpleUserRepository;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.Status;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.io.ByteArrayOutputStream;
+import java.text.SimpleDateFormat;
+import java.util.List;
 
 @Slf4j
 @AllArgsConstructor
@@ -300,6 +305,83 @@ public class ParcelService implements IParcelService {
   }
 
   public List<Parcel> getAllDamagedParcels() {
-    return parcelRepository.findByDamageImageUrlIsNotNull();  // Fetch all damaged parcels
+    return parcelRepository.findByDamageImageUrlIsNotNull();
+  }
+  @Override
+  public long getTotalParcels() {
+    return parcelRepository.count();
+  }
+  @Override
+  public byte[] generateParcelPdf(Integer parcelId) {
+    Parcel parcel = parcelRepository.findById(parcelId)
+      .orElseThrow(() -> new RuntimeException("Parcel not found"));
+
+    if (!parcel.getStatus().name().equals("DELIVERED")) {
+      throw new RuntimeException("Parcel must be DELIVERED to generate PDF.");
+    }
+
+    try {
+      Document document = new Document();
+      ByteArrayOutputStream out = new ByteArrayOutputStream();
+      PdfWriter.getInstance(document, out);
+      document.open();
+
+      // --- Logo ---
+     Image logo = Image.getInstance(getClass().getClassLoader().getResource("static/img.png"));
+      logo.scaleToFit(120, 60);
+      logo.setAlignment(Element.ALIGN_CENTER);
+      document.add(logo);
+
+      document.add(new Paragraph(" ")); // espace
+
+// --- Titre principal ---
+      Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 20, BaseColor.RED);
+      Paragraph title = new Paragraph("Delivery Note - SPEEDYGO", titleFont);
+      title.setAlignment(Element.ALIGN_CENTER);
+      document.add(title);
+
+      document.add(new Paragraph(" ")); // espace
+
+// --- Ligne séparatrice ---
+      LineSeparator ls = new LineSeparator();
+      ls.setLineColor(BaseColor.RED);
+      document.add(new Chunk(ls));
+
+      document.add(new Paragraph(" ")); // espace
+
+// --- Infos principales ---
+      Font textFont = FontFactory.getFont(FontFactory.HELVETICA, 12);
+      SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+
+      Paragraph details = new Paragraph();
+      details.setFont(textFont);
+      details.add("Parcel Reference : " + parcel.getParcelId() + "\n");
+      details.add("customer : " + parcel.getSimpleUser().getUserFirstName() + " " + parcel.getSimpleUser().getUserLastName() + "\n");
+      details.add("Departure Address : " + parcel.getParcelDeparture() + "\n");
+      details.add("Destination Address: " + parcel.getParcelDestination() + "\n");
+      details.add("Parcel Weight      : " + parcel.getParcelWeight() + " Kg\n");
+      details.add("Parcel Category : " + parcel.getParcelCategory() + "\n");
+      details.add("Status  : " + parcel.getStatus() + "\n");
+      details.add("Date    : " + sdf.format(parcel.getParcelDate()) + "\n");
+      details.add("Price   : " + parcel.getParcelPrice() + " TND\n");
+
+      document.add(details);
+// --- Ligne séparatrice ---
+      LineSeparator ls1 = new LineSeparator();
+      ls.setLineColor(BaseColor.RED);
+      document.add(new Chunk(ls));
+
+      document.add(new Paragraph(" ")); // espace
+// --- Message de remerciement ---
+      document.add(new Paragraph(" "));
+      Font footerFont = FontFactory.getFont(FontFactory.HELVETICA_OBLIQUE, 10, BaseColor.DARK_GRAY);
+      Paragraph footer = new Paragraph("Thank you for using SpeedyGo !", footerFont);
+      footer.setAlignment(Element.ALIGN_CENTER);
+      document.add(footer);
+      document.close();
+      return out.toByteArray();
+    } catch (Exception e) {
+      throw new RuntimeException("Error generating PDF: " + e.getMessage());
+    }
   }
 }

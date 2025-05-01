@@ -48,4 +48,9 @@ public interface IParcelService {
   //DAMAGED PARCEL
   public String saveDamageImage(Integer parcelId, MultipartFile image, String description) throws IOException ;
   public List<Parcel> getAllDamagedParcels() ;
+  long getTotalParcels(); // Nouvelle méthode ajoutée
+
+  //pdf
+  byte[] generateParcelPdf(Integer parcelId);
+
 }

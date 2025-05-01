@@ -4,7 +4,9 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -225,7 +227,23 @@ public List<Parcel> getDamagedParcels() {
 
   return damagedParcels;
 }
+  @GetMapping("/total")
+  public long getTotalParcels() {
+    return parcelService.getTotalParcels();
+  }
 
+  @GetMapping("/{id}/pdf")
+  public ResponseEntity<byte[]> downloadParcelPdf(@PathVariable Integer id) {
+    byte[] pdfContent = parcelService.generateParcelPdf(id);
+
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_PDF);
+    headers.setContentDispositionFormData("attachment", "parcel_" + id + ".pdf");
+
+    return ResponseEntity.ok()
+      .headers(headers)
+      .body(pdfContent);
+  }
 }
 
 
