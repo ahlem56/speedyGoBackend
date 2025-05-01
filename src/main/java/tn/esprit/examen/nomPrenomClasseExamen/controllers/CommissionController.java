@@ -31,7 +31,6 @@ public class CommissionController {
 
 
     @GetMapping("/partner/{partnerId}")
-// ❌ REMOVE @PreAuthorize or @RolesAllowed if you had any
     public ResponseEntity<List<Commission>> getCommissionsByPartner(
             @PathVariable Long partnerId
     ) {

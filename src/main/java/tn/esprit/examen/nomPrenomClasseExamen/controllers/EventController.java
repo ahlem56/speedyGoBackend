@@ -5,8 +5,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.Event;
+import tn.esprit.examen.nomPrenomClasseExamen.entities.Vehicle;
 import tn.esprit.examen.nomPrenomClasseExamen.services.EventService;
-import tn.esprit.examen.nomPrenomClasseExamen.services.NotificationService;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -19,7 +19,6 @@ import java.util.Map;
 public class EventController {
 
     private final EventService eventService;
-    private final NotificationService notificationService;
 
     @GetMapping("/getAllEvent")
     public ResponseEntity<List<Event>> getAllEvents() {
@@ -33,22 +32,14 @@ public class EventController {
 
     @PostMapping("/createEvent")
     public ResponseEntity<?> createEvent(@RequestBody Event event) {
-        try {
-            Event createdEvent = eventService.createEvent(event);
-            notificationService.sendEventCreationNotification(createdEvent);
-
-            return new ResponseEntity<>(createdEvent, HttpStatus.CREATED);
-        } catch (Exception e) {
-            Map<String, String> errorResponse = new HashMap<>();
-            errorResponse.put("message", "Validation error: " + e.getMessage());
-            errorResponse.put("timestamp", LocalDateTime.now().toString());
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
-        }
+            Event created = eventService.createEvent(event);
+            return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PutMapping("/updateEvent/{id}")
-    public ResponseEntity<Event> updateEvent(@PathVariable Integer id, @RequestBody Event eventDetails) {
-        return ResponseEntity.ok(eventService.updateEvent(id, eventDetails));
+    public Event updateEvent(@PathVariable Integer id , @RequestBody Event event){
+        event.setEventId(id);
+        return eventService.updateEvent(event);
     }
 
     @DeleteMapping("/deleteEvent/{id}")
@@ -57,15 +48,40 @@ public class EventController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/registreUser/{idEvent}/register/{userId}")
-    public ResponseEntity<Void> registerUser(@PathVariable Integer idEvent, @PathVariable Integer userId) {
-        eventService.registerUser(idEvent, userId);
-        return ResponseEntity.ok().build();
+    @PostMapping("/register/{idEvent}/{userId}")
+    public ResponseEntity<?> registerUser(
+            @PathVariable Integer idEvent,
+            @PathVariable Integer userId
+    ) {
+        try {
+            eventService.registerUser(idEvent, userId);
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("message", e.getMessage());
+            error.put("timestamp", LocalDateTime.now().toString());
+            return ResponseEntity.badRequest().body(error);
+        }
     }
 
-    @PostMapping("/unregistreUser/{idEvent}/unregister/{userId}")
-    public ResponseEntity<Void> unregisterUser(@PathVariable Integer idEvent, @PathVariable Integer userId) {
-        eventService.unregisterUser(idEvent, userId);
-        return ResponseEntity.ok().build();
+    @PostMapping("/unregister/{idEvent}/{userId}")
+    public ResponseEntity<?> unregisterUser(
+            @PathVariable Integer idEvent,
+            @PathVariable Integer userId
+    ) {
+        try {
+            eventService.unregisterUser(idEvent, userId);
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("message", e.getMessage());
+            error.put("timestamp", LocalDateTime.now().toString());
+            return ResponseEntity.badRequest().body(error);
+        }
+    }
+
+    @GetMapping("/mostParticipants")
+    public ResponseEntity<Event> getEventWithMostParticipants() {
+        return ResponseEntity.ok(eventService.getEventWithMostParticipants());
     }
 }

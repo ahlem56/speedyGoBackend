@@ -27,7 +27,7 @@ public class VehicleController {
 
     @PutMapping("/updateVehicle/{id}")
     public Vehicle updateVehicle(@PathVariable Integer id, @RequestBody Vehicle vehicle) {
-        vehicle.setVehiculeId(id);  // Ensure the ID in the request matches the ID in the path
+        vehicle.setVehiculeId(id);
         return vehicleService.updateVehicle(vehicle);
     }
 
