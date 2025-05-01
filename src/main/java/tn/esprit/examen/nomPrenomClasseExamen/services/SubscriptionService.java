@@ -9,7 +9,9 @@ import tn.esprit.examen.nomPrenomClasseExamen.entities.Subscription;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.SubscriptionRepository;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -76,5 +78,17 @@ public class SubscriptionService implements ISubscriptionService {
                 }
             }
         }
+    }
+
+
+    // Method to fetch statistics for subscriptions
+    public Map<String, Integer> getSubscriptionStatistics() {
+        List<Subscription> subscriptions = subscriptionRepository.findAll();
+        Map<String, Integer> statistics = new HashMap<>();
+
+        for (Subscription subscription : subscriptions) {
+            statistics.put(subscription.getSubscriptionType().toString(), subscription.getSimpleUsers().size());
+        }
+        return statistics;
     }
 }

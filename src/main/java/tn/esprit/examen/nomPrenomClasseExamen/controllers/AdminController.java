@@ -11,6 +11,8 @@ import tn.esprit.examen.nomPrenomClasseExamen.entities.TripLocationDTO;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.ParcelRepository;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.UserRepository;
 import tn.esprit.examen.nomPrenomClasseExamen.services.IAdminService;
+import tn.esprit.examen.nomPrenomClasseExamen.services.SimpleUserService;
+import tn.esprit.examen.nomPrenomClasseExamen.services.SubscriptionService;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -24,6 +26,8 @@ public class AdminController {
   private IAdminService adminService;
   private UserRepository userRepository;
   private ParcelRepository parcelRepository;
+  private SubscriptionService subscriptionService;
+  private SimpleUserService simpleUserService;
 
   @PostMapping("/createAdmin")
   public Admin createAdmin(@RequestBody Admin admin) {
@@ -58,5 +62,15 @@ public class AdminController {
     long totalParcels = parcelRepository.count();
     return ResponseEntity.ok(totalParcels);
   }
+  // Endpoint to get the number of users subscribed to each subscription
+  @GetMapping("/subscriptionStats")
+  public ResponseEntity<Map<String, Integer>> getSubscriptionStatistics() {
+    return ResponseEntity.ok(subscriptionService.getSubscriptionStatistics());
+  }
 
+  // Endpoint to get the number of carpool offers posted by users
+  @GetMapping("/carpoolOfferStats")
+  public ResponseEntity<Map<Integer, Integer>> getCarpoolOfferStatistics() {
+    return ResponseEntity.ok(simpleUserService.getCarpoolOfferStatistics());
+  }
 }

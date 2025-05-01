@@ -9,6 +9,9 @@ import tn.esprit.examen.nomPrenomClasseExamen.repositories.SimpleUserRepository;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.SubscriptionRepository;
 
 import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -44,6 +47,18 @@ public class SimpleUserService implements ISimpleUserService {
     // Add the save method to persist users
     public SimpleUser save(SimpleUser user) {
         return simpleUserRepository.save(user);
+    }
+
+
+    // Method to fetch statistics for carpool offers posted by users
+    public Map<Integer, Integer> getCarpoolOfferStatistics() {
+        List<SimpleUser> users = simpleUserRepository.findAll();
+        Map<Integer, Integer> offerStats = new HashMap<>();
+
+        for (SimpleUser user : users) {
+            offerStats.put(user.getUserId(), user.getCarpolingDoneSuser()); // Get number of carpool offers posted
+        }
+        return offerStats;
     }
 
 }
