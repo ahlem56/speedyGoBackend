@@ -11,11 +11,18 @@ public interface IEventService {
 
     Event createEvent(Event event);
 
-    Event updateEvent(Integer idEvent, Event eventDetails);
+    //Event updateEvent(Integer idEvent, Event eventDetails);
+
+    Event updateEvent(Event event);
 
     void deleteEvent(Integer idEvent);
 
     void registerUser(Integer idEvent, Integer userId);
 
     void unregisterUser(Integer idEvent, Integer userId);
+
+    List<Event> getAllEventsForUser(Integer userId);
+
+    Event getEventWithMostParticipants();
 }
+

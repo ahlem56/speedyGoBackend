@@ -10,6 +10,7 @@ import tn.esprit.examen.nomPrenomClasseExamen.repositories.EventRepository;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.SimpleUserRepository;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @AllArgsConstructor
@@ -38,11 +39,8 @@ public class EventService implements IEventService {
         return createdEvent; }
 
     @Override
-    public Event updateEvent(Integer idEvent, Event eventDetails) {
-        Event existing = getEventById(idEvent);
-        existing.setEventDate(eventDetails.getEventDate());
-        existing.setEventDescription(eventDetails.getEventDescription());
-        return eventRepository.save(existing);
+    public Event updateEvent(Event event) {
+         return eventRepository.save(event);
     }
 
     @Override
@@ -53,16 +51,56 @@ public class EventService implements IEventService {
     @Override
     public void registerUser(Integer idEvent, Integer userId) {
         Event event = getEventById(idEvent);
-        SimpleUser user = simpleUserRepository.findById(userId).get();
-        eventRepository.save(event);
+        SimpleUser user = simpleUserRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+
+        if(event.getSimpleUsers().size() >= event.getMaxParticipants()) {
+            throw new RuntimeException("Event is full");
+        }
+
+        if(!event.getSimpleUsers().contains(user)) {
+            event.getSimpleUsers().add(user);
+            eventRepository.save(event);
+        }
     }
 
     @Override
     public void unregisterUser(Integer idEvent, Integer userId) {
         Event event = getEventById(idEvent);
-        SimpleUser user = simpleUserRepository.findById(userId).get();
+        SimpleUser user = simpleUserRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+
+        if(event.getSimpleUsers().contains(user)) {
+            event.getSimpleUsers().remove(user);
+            eventRepository.save(event);
+        }
     }
-    public List<SimpleUser> getAllSimpleUsers() {
-        return simpleUserRepository.findAll();  // Assuming you have a SimpleUserRepository
+
+    @Override
+    public List<Event> getAllEventsForUser(Integer userId) {
+        // fetch the user once (or you can skip, since you only need the ID)
+        SimpleUser user = simpleUserRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return eventRepository.findAll()
+                .stream()
+                .peek(event -> {
+                    // 1) how many participants right now
+                    int size = event.getSimpleUsers().size();
+                    event.setCurrentParticipants(size);
+
+                    // 2) is this user in that set?
+                    boolean isReg = event.getSimpleUsers()
+                            .stream()
+                            .anyMatch(u -> u.getUserId().equals(userId));
+                    event.setRegistered(isReg);
+                })
+                .collect(Collectors.toList());
     }
+
+    @Override
+    public Event getEventWithMostParticipants() {
+        return eventRepository.findAll().stream()
+                .max((e1, e2) -> Integer.compare(e1.getSimpleUsers().size(), e2.getSimpleUsers().size()))
+                .orElseThrow(() -> new RuntimeException("No events found"));
+    }
+
 }

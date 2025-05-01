@@ -21,7 +21,6 @@ public class SimpleUser extends User{
     private Integer carpolingDoneSuser;
 
 
-
     @OneToMany(mappedBy = "simpleUserOffer")
 
     private Set<Carpool> carpoolOffered = new LinkedHashSet<>();//offered carpools
@@ -60,8 +59,6 @@ public class SimpleUser extends User{
 
     @OneToMany(mappedBy = "simpleUser")  // Correct mapping
     private Set<Trip> trips;
-
-
 
 }
 

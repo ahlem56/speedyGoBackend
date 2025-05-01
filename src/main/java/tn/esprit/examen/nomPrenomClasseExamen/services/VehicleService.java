@@ -78,11 +78,9 @@ public class VehicleService implements IVehicleService {
 
         vehicle.setLatitude(latitude);
         vehicle.setLongitude(longitude);
-        // Mise à jour de l'instantané de la position et de l'heure
         Date now = new Date();
         vehicle.setUpdateTime(now);
 
-        // Ajout d'un nouvel enregistrement dans l'historique de trajet
         vehicle.getTravelHistory().add(new LocationRecord(latitude, longitude, now));
 
         return vehicleRepository.save(vehicle);
@@ -92,7 +90,6 @@ public class VehicleService implements IVehicleService {
         return vehicleRepository.findByDriverIsNull();
     }
 
-    // Méthode pour récupérer l'historique depuis l'entité Vehicle
     public List<LocationRecord> getTravelHistory(Integer vehicleId) {
         Vehicle vehicle = vehicleRepository.findById(vehicleId)
                 .orElseThrow(() -> new RuntimeException("Véhicule introuvable"));
