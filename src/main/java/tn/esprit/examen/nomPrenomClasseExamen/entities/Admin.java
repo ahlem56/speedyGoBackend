@@ -8,6 +8,8 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
+@Table(name = "admin")
+@DiscriminatorValue("ADMIN")
 @AllArgsConstructor
 public class Admin extends User {
     private String premissions;

@@ -77,7 +77,7 @@ public class RatingService {
         rating.setRater(rater);
         rating.setRated(rated);
         rating.setTrip(trip);
-        trip.setRated(true);  // Mark the trip as rated
+        trip.setIsRated(true); // Mark the trip as rated
 
         tripRepository.save(trip);  // Save the updated trip status
 

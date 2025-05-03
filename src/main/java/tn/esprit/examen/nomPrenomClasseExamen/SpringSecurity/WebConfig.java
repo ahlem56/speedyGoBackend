@@ -10,17 +10,12 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-
-        registry.addMapping("/examen/ws-chat")
-                .allowedOrigins("http://localhost:4200")  // Allow requests from Angular
-                .allowedMethods("GET", "POST", "OPTIONS");
-
         registry.addMapping("/**")
-                .allowedOriginPatterns("*")  // Ensure Angular app is allowed
-                .allowedMethods("GET", "POST", "PUT", "DELETE")
+                .allowedOrigins("http://localhost:4200")
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true)
-                .maxAge(3600);// Allow credentials if necessary
+                .maxAge(3600);
     }
 
     @Override

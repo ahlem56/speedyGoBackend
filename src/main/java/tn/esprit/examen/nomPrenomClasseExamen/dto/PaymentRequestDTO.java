@@ -1,10 +1,8 @@
-package tn.esprit.examen.nomPrenomClasseExamen.DTO;
+package tn.esprit.examen.nomPrenomClasseExamen.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.*;
 import lombok.Data;
-import lombok.Getter;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.PaymentMethod;
 
 import java.math.BigDecimal;
@@ -17,18 +15,25 @@ public class PaymentRequestDTO {
     @DecimalMin(value = "0.01")
     private BigDecimal paymentAmount;
 
-
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
     private Date paymentDate;
 
     @NotNull
-    private PaymentMethod  paymentMethod;
+    private PaymentMethod paymentMethod;
+    private Integer userId;
 
     private String stripePaymentMethodId;
 
     private Integer tripId;
     private Integer parcelId;
+    private Integer partnerId;
 
     public void setPaymentAmount(BigDecimal paymentAmount) {
-        this.paymentAmount = paymentAmount.setScale(2, RoundingMode.HALF_UP);
+        this.paymentAmount = paymentAmount != null ? paymentAmount.setScale(2, RoundingMode.HALF_UP) : null;
+    }
+
+    // Add setter for string-based paymentMethod
+    public void setPaymentMethod(String paymentMethod) {
+        this.paymentMethod = paymentMethod != null ? PaymentMethod.valueOf(paymentMethod.toUpperCase()) : null;
     }
 }
