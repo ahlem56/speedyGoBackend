@@ -18,5 +18,7 @@ public interface TripRepository extends JpaRepository<Trip, Integer> {
     List<Trip> findTripsByDateRange(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
     List<Trip> findTripsBySimpleUser(SimpleUser simpleUser);
     List<Trip> findByDriverVehicleVehiculeId(Integer VehiculeId);
+    List<Trip> findByTripDateBetweenAndReminderSentFalse(LocalDateTime start, LocalDateTime end);
+
 
 }

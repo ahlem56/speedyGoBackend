@@ -6,7 +6,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.Driver;
+import tn.esprit.examen.nomPrenomClasseExamen.entities.Trip;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.DriverRepository;
+import tn.esprit.examen.nomPrenomClasseExamen.repositories.RatingRepository;
+import tn.esprit.examen.nomPrenomClasseExamen.repositories.TripRepository;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,6 +21,8 @@ public class DriverService implements IDriverService {
 
   private DriverRepository driverRepository;
   private PasswordEncoder passwordEncoder; // Injection du BCryptPasswordEncoder
+  private TripRepository tripRepository;
+  private RatingRepository ratingRepository;
   @Override
   public Driver createDriver(Driver driver) {
     // Hachage du mot de passe avant de le sauvegarder
@@ -34,9 +39,23 @@ public class DriverService implements IDriverService {
     return null;  }
   @Override
   public void deleteDriver(Integer driverId) {
-    driverRepository.deleteById(driverId);
+    Optional<Driver> driverOpt = driverRepository.findById(driverId);
+    if (driverOpt.isPresent()) {
+      Driver driver = driverOpt.get();
 
+      // 1. Delete Ratings linked to Driver's Trips
+      for (Trip trip : driver.getTrips()) {
+        ratingRepository.deleteByTrip(trip);  // You must create a method in RatingRepository
+      }
+
+      // 2. Delete Trips
+      tripRepository.deleteAll(driver.getTrips());
+
+      // 3. Finally delete the Driver
+      driverRepository.deleteById(driverId);
+    }
   }
+
   @Override
   public Optional<Driver> getDriverById(Integer driverId) {
     return driverRepository.findById(driverId);

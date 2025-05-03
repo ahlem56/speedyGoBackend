@@ -58,6 +58,10 @@ public class Trip {
     @Column(name = "is_rated")
     private boolean isRated = false;  // Default value is false
 
+    @Column(name = "reminder_sent")
+    private boolean reminderSent = false; // Default is false
+
+
 
     @ManyToOne
     @JoinColumn(name = "driver_user_id")

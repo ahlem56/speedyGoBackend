@@ -1,5 +1,6 @@
 package tn.esprit.examen.nomPrenomClasseExamen.repositories;
 
+import jakarta.transaction.Transactional;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -36,4 +37,7 @@ public interface RatingRepository extends JpaRepository<Rating, Integer> {
     default List<User> findTopRatedPassengers(int limit) {
         return findTopRatedPassengers(PageRequest.of(0, limit));
     }
+    @Transactional
+    void deleteByTrip(Trip trip);  // <-- ADD THIS
+
 }

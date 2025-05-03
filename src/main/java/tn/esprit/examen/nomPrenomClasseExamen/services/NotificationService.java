@@ -133,6 +133,8 @@ public class NotificationService {
                 "Your parcel to %s has been shipped!",
                 parcel.getParcelDestination()
         ));
+        message.put("parcelId", parcel.getParcelId());  // <--- Add this
+        message.put("parcelStatus", parcel.getStatus().toString()); // <--- Add this (important!)
         message.put("details", Map.of(
                 "parcelId", parcel.getParcelId(),
                 "destination", parcel.getParcelDestination(),
@@ -143,7 +145,7 @@ public class NotificationService {
         try {
             String jsonMessage = new ObjectMapper().writeValueAsString(message);
             createNotification(jsonMessage, user);
-            notificationController.sendNotificationToClients(jsonMessage);
+            notificationController.sendNotificationToUser(jsonMessage, user.getUserId());
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }

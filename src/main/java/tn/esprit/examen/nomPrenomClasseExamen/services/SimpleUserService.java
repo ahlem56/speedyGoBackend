@@ -61,4 +61,25 @@ public class SimpleUserService implements ISimpleUserService {
         return offerStats;
     }
 
+    public Double calculateDiscountBasedOnActivity(SimpleUser user) {
+        double discount = 0.0;
+
+        switch (user.getActivityLevel()) {
+            case TOP_ACTIVE:
+                discount = 0.20; // 20% discount
+                break;
+            case CONTRIBUTEUR:
+                discount = 0.10; // 10% discount
+                break;
+            case INACTIF:
+                discount = 0.0; // No discount
+                break;
+            default:
+                discount = 0.0;
+        }
+
+        return discount;
+    }
+
+
 }

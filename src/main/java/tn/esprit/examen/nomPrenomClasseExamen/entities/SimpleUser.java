@@ -32,6 +32,7 @@ public class SimpleUser extends User{
 
     @Column(nullable = true)
     private Double averageRating; // Pourcentage de "Oui" ou null si aucune notation
+    private Float discountedPrice;  // Store the user's discounted price
 
     @OneToMany(mappedBy = "simpleUserOffer")
 

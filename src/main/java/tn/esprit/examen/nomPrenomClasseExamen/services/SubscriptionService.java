@@ -91,4 +91,54 @@ public class SubscriptionService implements ISubscriptionService {
         }
         return statistics;
     }
+
+    public Subscription subscribeUserWithDiscount(Integer userId, Integer subscriptionId) {
+        Optional<SimpleUser> user = simpleUserService.getUserById(userId);
+        Optional<Subscription> subscription = subscriptionRepository.findById(subscriptionId);
+
+        if (user.isPresent() && subscription.isPresent()) {
+            SimpleUser existingUser = user.get();
+            Subscription selectedSubscription = subscription.get();
+
+            // Get the original price (unchanged for all users)
+            float originalPrice = selectedSubscription.getSubscriptionPrice();
+
+            // Calculate discount based on user's activity level
+            double discount = simpleUserService.calculateDiscountBasedOnActivity(existingUser);
+            float discountedPrice = (float) (originalPrice * (1 - discount));
+
+            // Set the discounted price just for the active user; don't change the subscription price for everyone
+            existingUser.setDiscountedPrice(discountedPrice);
+
+            // Save the user with the updated discounted price
+            simpleUserService.save(existingUser);
+
+            // Link the subscription to the user
+            simpleUserService.addSubscriptionToUser(userId, subscriptionId);
+
+            // Prepare the response with both original and discounted prices
+            Map<String, Object> response = new HashMap<>();
+            response.put("subscription", selectedSubscription);   // Include subscription details
+            response.put("originalPrice", originalPrice);        // Include original price
+            response.put("discountedPrice", discountedPrice);    // Include discounted price
+
+            return selectedSubscription;  // Return the subscription with price details
+        }
+
+        return null;  // Handle when user or subscription is not found
+    }
+
+
+    public boolean unsubscribeUser(Integer userId) {
+        Optional<SimpleUser> user = simpleUserService.getUserById(userId);
+        if (user.isPresent()) {
+            SimpleUser existingUser = user.get();
+            existingUser.setSubscription(null);  // Remove subscription
+            simpleUserService.save(existingUser);  // Save the user with the updated subscription field
+            return true;
+        }
+        return false;
+    }
+
+
 }
