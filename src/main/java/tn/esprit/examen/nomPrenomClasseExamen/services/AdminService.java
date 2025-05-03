@@ -12,9 +12,12 @@ import tn.esprit.examen.nomPrenomClasseExamen.entities.Trip;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.TripLocationDTO;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.AdminRepository;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.TripRepository;
+import tn.esprit.examen.nomPrenomClasseExamen.entities.Payment;
+import tn.esprit.examen.nomPrenomClasseExamen.repositories.PaymentRepository;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,10 +29,9 @@ import java.util.stream.Stream;
 @Service
 public class AdminService implements IAdminService {
     private AdminRepository adminRepository;
-
-
     private PasswordEncoder passwordEncoder; // Injection du BCryptPasswordEncoder
     private TripRepository tripRepository;
+    private PaymentRepository paymentRepository;
 
     public long getTotalTrips() {
         // Assuming you have a Trip entity and it stores the trips in the database
@@ -43,7 +45,6 @@ public class AdminService implements IAdminService {
         admin.setUserPassword(encryptedPassword);
         return adminRepository.save(admin);
     }
-
 
     public List<TripLocationDTO> getTripsByLocation() {
         List<Trip> trips = tripRepository.findAll();
@@ -81,16 +82,18 @@ public class AdminService implements IAdminService {
         return tripLocationDTOs;
     }
 
-
     public Map<String, BigDecimal> getMonthlyRevenue() {
         // Get the current date
-        LocalDateTime endDate = LocalDateTime.now();
+        Date endDate = new Date();
 
         // Get the start date as 12 months ago
-        LocalDateTime startDate = endDate.minusMonths(12).toLocalDate().atStartOfDay();
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(endDate);
+        calendar.add(Calendar.MONTH, -12);
+        Date startDate = calendar.getTime();
 
-        // Fetch trips within the last year
-        List<Trip> trips = tripRepository.findTripsByDateRange(startDate, endDate);
+        // Fetch payments within the last year
+        List<Payment> payments = paymentRepository.findByPaymentDateBetween(startDate, endDate);
 
         // Generate a list of all month names (in English) to ensure all months appear
         String[] months = {
@@ -98,15 +101,19 @@ public class AdminService implements IAdminService {
                 "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"
         };
 
-        // Group trips by month and calculate total revenue for each month
-        Map<String, BigDecimal> monthlyRevenue = trips.stream()
-                .filter(trip -> trip.getTripPrice() != null && trip.getTripPrice().compareTo(BigDecimal.ZERO) > 0)
-                .collect(Collectors.groupingBy(
-                        trip -> trip.getTripDate().getMonth().toString().toUpperCase(), // Group by month name (uppercase)
-                        Collectors.reducing(BigDecimal.ZERO, Trip::getTripPrice, BigDecimal::add) // Sum up revenue per month
-                ));
+        // Group payments by month and calculate total revenue for each month
+        Map<String, BigDecimal> monthlyRevenue = new HashMap<>();
+        
+        for (Payment payment : payments) {
+            if (payment.getPaymentAmount() != null && payment.getPaymentAmount().compareTo(BigDecimal.ZERO) > 0) {
+                Calendar paymentCalendar = Calendar.getInstance();
+                paymentCalendar.setTime(payment.getPaymentDate());
+                String month = months[paymentCalendar.get(Calendar.MONTH)];
+                monthlyRevenue.merge(month, payment.getPaymentAmount(), BigDecimal::add);
+            }
+        }
 
-        // Ensure all months are represented, adding 0 revenue for months with no trips
+        // Ensure all months are represented, adding 0 revenue for months with no payments
         Map<String, BigDecimal> completeMonthlyRevenue = new HashMap<>();
         for (String month : months) {
             completeMonthlyRevenue.put(month, monthlyRevenue.getOrDefault(month, BigDecimal.ZERO));
@@ -115,16 +122,10 @@ public class AdminService implements IAdminService {
         return completeMonthlyRevenue;
     }
 
-
-
-
     private BigDecimal calculateRevenue(List<Trip> trips) {
         return trips.stream()
                 .filter(trip -> trip.getTripPrice() != null && trip.getTripPrice().compareTo(BigDecimal.ZERO) > 0)
                 .map(Trip::getTripPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);  // Correct accumulator
     }
-
-
-
 }

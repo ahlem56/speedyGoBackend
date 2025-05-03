@@ -1,5 +1,6 @@
 package tn.esprit.examen.nomPrenomClasseExamen.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
@@ -67,11 +68,12 @@ public class Trip {
     @OneToMany(mappedBy = "trip", orphanRemoval = true, cascade = CascadeType.ALL)
     private Set<Rules> ruleses = new LinkedHashSet<>();
 
-    @OneToOne
-    @JoinColumn(name = "payment_id")  // Association avec Payment
-    private Payment payment;
+    @OneToMany(mappedBy = "trip", fetch = FetchType.LAZY)
+    @JsonIgnoreProperties({"trip", "partner", "user", "parcel"})
+    private Set<Payment> payments;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "simple_user_id")
-    private SimpleUser simpleUser;  // The association with SimpleUser
+    @JsonIgnoreProperties({"partners", "carpoolOffered", "carpoolJoined", "events", "subscription", "complaints", "parcels", "notifications", "chats", "trips"})
+    private SimpleUser simpleUser;
 }

@@ -18,6 +18,7 @@ import java.util.Date;
 @Table(name = "user")
 @NoArgsConstructor
 @AllArgsConstructor
+@DiscriminatorColumn(name = "user_type")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "chats", "notifications", "trips", "parcels"})
 @Inheritance (strategy  = InheritanceType.JOINED)
 public abstract class  User {
@@ -52,6 +53,10 @@ public abstract class  User {
     @JoinColumn(name = "partner_id")
     private Partners partner;
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> recoveryAhlem
     @Override
     public String toString() {
         return "User{" +
@@ -60,4 +65,8 @@ public abstract class  User {
                 ", userLastName='" + userLastName + '\'' +
                 '}';
     }
+<<<<<<< HEAD
+=======
+
+>>>>>>> recoveryAhlem
 }

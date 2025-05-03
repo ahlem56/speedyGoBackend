@@ -1,8 +1,10 @@
 package tn.esprit.examen.nomPrenomClasseExamen.services;
+
 import lombok.RequiredArgsConstructor;
-import  lombok.extern.slf4j.Slf4j;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.*;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.CommissionRepository;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.PartnersRepository;
@@ -13,6 +15,7 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -22,63 +25,110 @@ public class CommissionService {
     private final PartnersRepository partnerRepository;
     private final CommissionRepository commissionRepository;
 
+    @Transactional
+    public Commission createCommission(Integer partnerId, BigDecimal amount, String description) {
+        log.info("Creating commission for partner ID: {}, amount: {}, description: {}", partnerId, amount, description);
+        if (partnerId == null) {
+            throw new IllegalArgumentException("Partner ID cannot be null");
+        }
+        Partners partner = partnerRepository.findById(partnerId)
+                .orElseThrow(() -> new IllegalArgumentException("Partner not found with ID: " + partnerId));
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Commission amount must be greater than zero");
+        }
+        Commission commission = new Commission();
+        commission.setPartner(partner);
+        commission.setAmount(amount);
+        commission.setCalculatedAt(LocalDateTime.now());
+        commission.setPaidOut(false);
+        commission.setDescription(description);
+        BigDecimal currentTotal = partner.getTotalCommission();
+        if (currentTotal == null) {
+            currentTotal = BigDecimal.ZERO;
+        }
+        partner.setTotalCommission(currentTotal.add(amount));
+        partnerRepository.save(partner);
+        log.info("Saving commission for partner: {}", partner.getPartnerName());
+        return commissionRepository.save(commission);
+    }
+
+    public List<tn.esprit.examen.nomPrenomClasseExamen.dto.CommissionDTO> getAllCommissions() {
+        return commissionRepository.findAll().stream().map(this::toDTO).collect(Collectors.toList());
+    }
+
     @Scheduled(cron = "0 * * * * ?")
+    @Transactional
     public void calculateDailyCommissions() {
+        log.info("Starting daily commission calculation");
         List<Payment> payments = paymentRepository.findByCommissionCalculatedFalse();
+        log.info("Found {} payments to process", payments.size());
 
-        payments.forEach(payment -> {
+        for (Payment payment : payments) {
             try {
-                Partners partner = payment.getPartner();
+                log.info("Processing payment ID: {}", payment.getPaymentId());
 
-                // Add null checks for critical dependencies
+                Partners partner = payment.getPartner();
                 if (partner == null) {
-                    log.warn("Skipping payment {} - no associated partner", payment.getPaymentId());
-                    return;
+                    log.info("Payment {} has no associated partner, skipping", payment.getPaymentId());
+                    payment.setCommissionCalculated(true);
+                    paymentRepository.save(payment);
+                    continue;
                 }
 
                 if (partner.getCommissionRate() == null) {
                     log.error("Partner {} has no commission rate set", partner.getPartnerId());
-                    return;
+                    payment.setCommissionCalculated(true);
+                    paymentRepository.save(payment);
+                    continue;
                 }
 
                 if (payment.getPaymentAmount() == null) {
                     log.error("Payment {} has no amount specified", payment.getPaymentId());
-                    return;
+                    payment.setCommissionCalculated(true);
+                    paymentRepository.save(payment);
+                    continue;
                 }
 
                 Commission commission = new Commission();
                 commission.setPartner(partner);
                 commission.setPayment(payment);
 
+                BigDecimal commissionRate = partner.getCommissionRate();
                 BigDecimal commissionAmount = payment.getPaymentAmount()
-                        .multiply(partner.getCommissionRate())
+                        .multiply(commissionRate.divide(BigDecimal.valueOf(100)))
                         .setScale(2, RoundingMode.HALF_UP);
 
                 commission.setAmount(commissionAmount);
                 commission.setCalculatedAt(LocalDateTime.now());
+                commission.setPaidOut(false);
 
                 commissionRepository.save(commission);
 
-                // Update partner's total
-                partner.setTotalCommission(
-                        partner.getTotalCommission() == null ?
-                                commissionAmount :
-                                partner.getTotalCommission().add(commissionAmount)
-                );
+                BigDecimal currentTotal = partner.getTotalCommission();
+                if (currentTotal == null) {
+                    currentTotal = BigDecimal.ZERO;
+                }
+                partner.setTotalCommission(currentTotal.add(commissionAmount));
                 partnerRepository.save(partner);
 
-                // Mark payment as processed
                 payment.setCommissionCalculated(true);
                 paymentRepository.save(payment);
-
+                log.info("Commission created for payment {}", payment.getPaymentId());
             } catch (Exception e) {
                 log.error("Error processing payment {}: {}", payment.getPaymentId(), e.getMessage());
-            }});}
-    public List<Commission> getCommissionsForPartner(Long partnerId) {
-        return commissionRepository.findByPartnerId(partnerId);
+            }
+        }
+        log.info("Completed daily commission calculation");
     }
 
-    public Map<String, BigDecimal> getCommissionSummary(Long partnerId) {
+    public List<tn.esprit.examen.nomPrenomClasseExamen.dto.CommissionDTO> getCommissionsForPartner(Integer partnerId) {
+        log.info("Getting commissions for partner ID: {}", partnerId);
+        List<Commission> commissions = commissionRepository.findByPartnerId(partnerId);
+        return commissions.stream().map(this::toDTO).collect(Collectors.toList());
+    }
+
+    public Map<String, BigDecimal> getCommissionSummary(Integer partnerId) {
+        log.info("Getting commission summary for partner ID: {}", partnerId);
         List<Commission> commissions = commissionRepository.findByPartnerId(partnerId);
 
         BigDecimal total = commissions.stream()
@@ -90,11 +140,28 @@ public class CommissionService {
                 .map(Commission::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
+        BigDecimal paid = total.subtract(pending);
+
         return Map.of(
                 "total", total,
-                "pending", pending
+                "pending", pending,
+                "paid", paid
         );
     }
 
-
+    public tn.esprit.examen.nomPrenomClasseExamen.dto.CommissionDTO toDTO(Commission commission) {
+        tn.esprit.examen.nomPrenomClasseExamen.dto.CommissionDTO dto = new tn.esprit.examen.nomPrenomClasseExamen.dto.CommissionDTO();
+        dto.setCommissionId(commission.getCommissionId());
+        dto.setPartnerId(commission.getPartner() != null ? commission.getPartner().getPartnerId() : null);
+        dto.setPaymentId(commission.getPayment() != null ? commission.getPayment().getPaymentId() : null);
+        dto.setAmount(commission.getAmount());
+        dto.setPaidOut(commission.isPaidOut());
+        dto.setDescription(commission.getDescription());
+        dto.setCalculatedAt(commission.getCalculatedAt());
+        dto.setUpdatedAt(commission.getUpdatedAt());
+        if (commission.getPartner() != null) {
+            dto.setPartnerName(commission.getPartner().getPartnerName());
+        }
+        return dto;
+    }
 }

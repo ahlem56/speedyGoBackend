@@ -17,40 +17,34 @@ public class SpringSecurity {
     private final UserService userService;
 
     public SpringSecurity(UserService userService) {
-
         this.userService = userService;
     }
 
-    // Bean for PasswordEncoder
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();  // Use BCryptPasswordEncoder for password encoding
+        return new BCryptPasswordEncoder();
     }
 
-    // Bean for AuthenticationManager
     @Bean
     public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
         return http.getSharedObject(AuthenticationManagerBuilder.class)
-                .userDetailsService(userService)  // Use the UserService here
+                .userDetailsService(userService)
                 .passwordEncoder(passwordEncoder())
                 .and()
                 .build();
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception  {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.cors()
                 .and()
-                .csrf().disable()  // Disable CSRF for API use
+                .csrf().disable()
                 .authorizeRequests()
-                .requestMatchers("/user/signup", "/user/signin","/event/**", "/public/**" ,"/trip/**","/driver/**","/Admin/**","/parcel/**","/trip/getTripsForUser/","/subscription/**","/subscription/subscribeToSubscription/**","/user/forgot-password","/user/reset-password","/vehicle/**","/user/upload-profile-photo","/user/profile-photo/**","/trip/acceptTrip/**","/trip/refuseTrip/**","/user/update-profile","/payments/**","/partners/**", "/carpools/**","/carpools/get","/complaints/**","/completeTrip/*","/ratings/rate/*","/sendSos","/ws-chat","/chat","/user/test-payment/**", "/commission/**","/predict_price").permitAll()// Allow these endpoints to be publicly accessible//.anyRequest().authenticated()
-                .anyRequest().permitAll()// All other requests require authentication
+                .requestMatchers("/user/signup", "/user/signin", "/event/**", "/public/**", "/trip/**", "/driver/**", "/Admin/**", "/parcel/**", "/subscription/**", "/user/forgot-password", "/user/reset-password", "/vehicle/**", "/user/upload-profile-photo", "/user/profile-photo/**", "/trip/acceptTrip/**", "/trip/refuseTrip/**", "/user/update-profile", "/partners/**", "/carpools/**", "/carpools/get", "/complaints/**", "/completeTrip/*", "/ratings/rate/*", "/sendSos", "/ws-chat", "/chat", "/user/test-payment/**", "/commission/**", "/predict_price", "/payments/**").permitAll()
+                .anyRequest().permitAll()
                 .and()
-                .formLogin().disable()  // Disable Spring Security's default form login
-                .httpBasic();  // Optionally enable HTTP Basic authentication
-
+                .formLogin().disable()
+                .httpBasic();
         return http.build();
     }
-
-
 }

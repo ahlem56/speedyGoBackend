@@ -40,6 +40,7 @@ public class Payment {
     @JoinColumn(name = "parcel_id")
     private Parcel parcel;
 
+<<<<<<< HEAD
     @OneToOne
     @JoinColumn(name = "trip_id") // Own it! No mappedBy
     private Trip trip;
@@ -49,6 +50,17 @@ public class Payment {
     private Partners partner;
 
     @ManyToOne(fetch = FetchType.EAGER)
+=======
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "trip_id")
+    private Trip trip;
+
+    @ManyToOne
+    @JoinColumn(name = "partnerId", insertable = false, updatable = false)
+    private Partners partner;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+>>>>>>> recoveryAhlem
     @JoinColumn(name = "user_id")
     private SimpleUser user;
 
