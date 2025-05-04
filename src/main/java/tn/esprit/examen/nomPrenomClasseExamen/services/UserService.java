@@ -40,6 +40,8 @@ public class UserService implements IUserService, org.springframework.security.c
             role = "ADMIN";
         } else if (user instanceof Driver) {
             role = "DRIVER";
+        } else if (user instanceof SimpleUser) {
+            role = "SimpleUser";
         }
 
         return User.withUsername(user.getUserEmail())

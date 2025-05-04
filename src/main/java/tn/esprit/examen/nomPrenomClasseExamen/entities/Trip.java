@@ -1,5 +1,6 @@
 package tn.esprit.examen.nomPrenomClasseExamen.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
@@ -46,8 +47,10 @@ public class Trip {
     @DecimalMin("-180.0")
     @DecimalMax("180.0")
     private BigDecimal longitude;
-    private boolean readyForDriverRating; // Indicates if driver can rate passenger
-    private boolean readyForPassengerRating; // Indicates if passenger can rate driver
+    @Column(nullable = false)
+    private Boolean readyForDriverRating = false;  // default value
+    @Column(nullable = false)
+    private Boolean readyForPassengerRating=false; // Indicates if passenger can rate driver
 
     @NotNull
     @Min(value = 1, message = "Number of passengers must be at least 1")
@@ -56,7 +59,7 @@ public class Trip {
     private Integer numberOfPassengers = 1;
 
     @Column(name = "is_rated")
-    private boolean isRated = false;  // Default value is false
+    private Boolean isRated = false; // Default value is false
 
     @Column(name = "reminder_sent")
     private boolean reminderSent = false; // Default is false
@@ -71,11 +74,12 @@ public class Trip {
     @OneToMany(mappedBy = "trip", orphanRemoval = true, cascade = CascadeType.ALL)
     private Set<Rules> ruleses = new LinkedHashSet<>();
 
-    @OneToOne
-    @JoinColumn(name = "payment_id")  // Association avec Payment
-    private Payment payment;
+    @OneToMany(mappedBy = "trip", fetch = FetchType.LAZY)
+    @JsonIgnoreProperties({"trip", "partner", "user", "parcel"})
+    private Set<Payment> payments;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "simple_user_id")
-    private SimpleUser simpleUser;  // The association with SimpleUser
+    @JsonIgnoreProperties({"partners", "carpoolOffered", "carpoolJoined", "events", "subscription", "complaints", "parcels", "notifications", "chats", "trips"})
+    private SimpleUser simpleUser;
 }

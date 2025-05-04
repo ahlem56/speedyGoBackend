@@ -1,5 +1,6 @@
 package tn.esprit.examen.nomPrenomClasseExamen.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -18,6 +19,22 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SimpleUser extends User{
+    private String phoneNumber;
+    private String city;
+    private String state;
+    private String zipCode;
+    private String country;
+    private String bio;
+    private String website;
+    private String socialMedia;
+    private String interests;
+    private String skills;
+    private String education;
+    private String experience;
+    private String certifications;
+    private String awards;
+    private String languages;
+    private String hobbies;
     private Integer partnerCodeSuser;
     private Boolean subscriptionSuser;
     private Integer carpolingDoneSuser = 0; // Nombre d'offres créées
@@ -34,6 +51,9 @@ public class SimpleUser extends User{
     private Double averageRating; // Pourcentage de "Oui" ou null si aucune notation
     private Float discountedPrice;  // Store the user's discounted price
 
+    @Column(name = "role") // Add role field
+    private String role;
+
     @OneToMany(mappedBy = "simpleUserOffer")
 
     private Set<Carpool> carpoolOffered = new LinkedHashSet<>();//offered carpools
@@ -49,10 +69,9 @@ public class SimpleUser extends User{
             inverseJoinColumns = @JoinColumn(name = "events_eventId"))
     private Set<Event> events = new LinkedHashSet<>();
 
-    @ManyToOne
-    @JoinColumn(name = "partners_partner_id")
+    @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "partners_partner_id")
+    @JsonBackReference
     private Partners partners;
-
     @ManyToOne
     @JoinColumn(name = "subscription_subscription_id") // This links SimpleUser to Subscription
     private Subscription subscription;

@@ -1,6 +1,7 @@
 package tn.esprit.examen.nomPrenomClasseExamen.controllers;
 
 import lombok.AllArgsConstructor;
+import org.hibernate.Hibernate;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
@@ -25,6 +26,7 @@ import tn.esprit.examen.nomPrenomClasseExamen.SpringSecurity.JwtResponse;
 import tn.esprit.examen.nomPrenomClasseExamen.SpringSecurity.JwtUtil;
 import tn.esprit.examen.nomPrenomClasseExamen.SpringSecurity.UploadResponse;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.*;
+import tn.esprit.examen.nomPrenomClasseExamen.repositories.PartnersRepository;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.SimpleUserRepository;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.UserRepository;
 import tn.esprit.examen.nomPrenomClasseExamen.services.PaymentService;
@@ -49,6 +51,7 @@ public class UserController {
 
     private final SimpleUserRepository simpleUserRepository;
     private final AuthenticationManager authenticationManager;
+    private final PartnersRepository partnersRepository;
     private final PasswordEncoder passwordEncoder;
     private JwtUtil jwtUtil;
     private UserRepository userRepository;
@@ -61,26 +64,25 @@ public class UserController {
     @CrossOrigin(origins = "http://localhost:4200")
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@RequestBody SimpleUser simpleUser) {
-        // Validate password is not empty
+        // Validate password
         if (simpleUser.getUserPassword() == null || simpleUser.getUserPassword().isEmpty()) {
             return new ResponseEntity<>("Password cannot be empty", HttpStatus.BAD_REQUEST);
         }
-
         if (simpleUser.getUserPassword().length() < 6) {
             return new ResponseEntity<>("Password must be at least 6 characters", HttpStatus.BAD_REQUEST);
         }
+        // Validate firstName
         if (simpleUser.getUserFirstName() == null || simpleUser.getUserFirstName().isEmpty()) {
             return new ResponseEntity<>("First Name is required", HttpStatus.BAD_REQUEST);
         }
-
+        // Validate lastName
         if (simpleUser.getUserLastName() == null || simpleUser.getUserLastName().isEmpty()) {
             return new ResponseEntity<>("Last Name is required", HttpStatus.BAD_REQUEST);
         }
-
+        // Validate cin
         if (simpleUser.getUserCin() == null || simpleUser.getUserCin() <= 0) {
             return new ResponseEntity<>("CIN must be a valid positive number", HttpStatus.BAD_REQUEST);
         }
-
         // Validate email format
         String emailRegex = "^[A-Za-z0-9+_.-]+@(.+)$";
         Pattern pattern = Pattern.compile(emailRegex);
@@ -88,17 +90,17 @@ public class UserController {
         if (!matcher.matches()) {
             return new ResponseEntity<>("Invalid email format", HttpStatus.BAD_REQUEST);
         }
-
-        // Encode the password before saving
+        // Check email uniqueness
+        if (userRepository.findByUserEmail(simpleUser.getUserEmail()) != null) {
+            return new ResponseEntity<>("Email already in use", HttpStatus.BAD_REQUEST);
+        }
+        // Encode password
         simpleUser.setUserPassword(passwordEncoder.encode(simpleUser.getUserPassword()));
-
-        // Save the new user to the database
+        // Save user
         simpleUserRepository.save(simpleUser);
-
         ApiResponse apiResponse = new ApiResponse("User created successfully", true);
         return ResponseEntity.status(HttpStatus.CREATED).body(apiResponse);
     }
-
 
 
 
@@ -125,42 +127,32 @@ public class UserController {
 //    }
     @PostMapping("/signin")
     public ResponseEntity<JwtResponse> signIn(@RequestBody SimpleUser simpleUser) {
-        // Récupérer l'utilisateur par email
         User user = userRepository.findByUserEmail(simpleUser.getUserEmail());
         if (user == null) {
             throw new UsernameNotFoundException("User not found");
         }
 
-
-        // Vérifier le mot de passe
         if (!passwordEncoder.matches(simpleUser.getUserPassword(), user.getUserPassword())) {
             throw new BadCredentialsException("Invalid credentials");
         }
 
-        // Déterminer dynamiquement la sous-classe de l'utilisateur
         String role = getRoleFromUser(user);
+        String token = jwtUtil.generateToken(user.getUserEmail(), role, user.getUserId().longValue()); // Pass userId
 
-        // Générer le token avec le rôle
-        String token = jwtUtil.generateToken(user.getUserEmail(), role);
-
-        // Retourner le token et le rôle
         JwtResponse response = new JwtResponse("Bearer " + token, role);
-        response.setUser(user);  // Add the user object to the response
+        response.setUser(user);
         return ResponseEntity.ok(response);
-
-
     }
-
     // Méthode pour détecter la sous-classe de l'utilisateur
     private String getRoleFromUser(User user) {
         if (user instanceof Admin) {
-            return "Admin";
+            return "ADMIN";
         } else if (user instanceof Driver) {
-            return "Driver";
+            return "DRIVER";
         } else if (user instanceof SimpleUser) {
             return "SimpleUser";
         }
-        return "Unknown";
+        return "SimpleUser";
     }
 
     @PostMapping("/forgot-password")
@@ -245,6 +237,19 @@ public class UserController {
         }
     }
 
+    @GetMapping("/profile")
+    public ResponseEntity<User> getUserProfile(@AuthenticationPrincipal UserDetails userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
+        User user = userRepository.findByUserEmail(userDetails.getUsername());
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+        // Clear the partner field if necessary (though FetchType.EAGER may make this redundant)
+        user.setPartner(null); // Updated to match the correct field name
+        return ResponseEntity.ok(user);
+    }
 
 
     @GetMapping("/profile-photo/{fileName}")
@@ -300,16 +305,13 @@ public class UserController {
 
     @PutMapping("/update-profile")
     public ResponseEntity<?> updateProfile(@RequestHeader("Authorization") String token, @RequestBody Map<String, String> updatedData) {
-        // Extract user email from JWT token
-        String jwt = token.substring(7); // Remove "Bearer " prefix
-        String email = jwtUtil.extractUsername(jwt); // Get email from JWT
-
+        String jwt = token.substring(7);
+        String email = jwtUtil.extractUsername(jwt);
         User user = userRepository.findByUserEmail(email);
         if (user == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
         }
-
-        // Update fields dynamically
+        // Update fields
         if (updatedData.containsKey("firstName")) {
             user.setUserFirstName(updatedData.get("firstName"));
         }
@@ -317,20 +319,37 @@ public class UserController {
             user.setUserLastName(updatedData.get("lastName"));
         }
         if (updatedData.containsKey("email")) {
-            user.setUserEmail(updatedData.get("email"));
+            user.setUserEmail(updatedData.get("email")); // Allow email update without uniqueness check
         }
         if (updatedData.containsKey("address")) {
             user.setUserAddress(updatedData.get("address"));
         }
         if (updatedData.containsKey("birthDate")) {
-            user.setUserBirthDate(java.sql.Date.valueOf(updatedData.get("birthDate"))); // Convert to Date
+            try {
+                user.setUserBirthDate(java.sql.Date.valueOf(updatedData.get("birthDate")));
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid birthDate format (yyyy-MM-dd)");
+            }
         }
-
-        userRepository.save(user); // Save updates
-
+        if (updatedData.containsKey("partnerId")) {
+            try {
+                Integer partnerId = Integer.parseInt(updatedData.get("partnerId"));
+                Partners partner = partnersRepository.findById(partnerId)
+                        .orElseThrow(() -> new IllegalArgumentException("Partner not found"));
+                user.setPartner(partner);
+            } catch (NumberFormatException e) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid partnerId");
+            }
+        }
+        // Log user_type
+        System.out.println("User type before save: " + (user instanceof SimpleUser ? "SimpleUser" : user instanceof Admin ? "Admin" : "Driver"));
+        userRepository.save(user);
         return ResponseEntity.ok(Map.of("message", "Profile updated successfully"));
     }
-
+    @GetMapping("/partners")
+    public List<User> getPartners() {
+        return userRepository.findByPartnerNotNull();
+    }
 
     @PostMapping("/test-payment")
     public ResponseEntity<String> testPayment(@RequestBody PaymentRequest paymentRequest) {
@@ -370,7 +389,6 @@ public class UserController {
             @RequestParam(defaultValue = "5") int limit) {
         return ResponseEntity.ok(ratingService.getTopRatedPassengers(limit));
     }
-
 
 
 }

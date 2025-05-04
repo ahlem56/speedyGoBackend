@@ -17,10 +17,11 @@ public class JwtUtil {
           "your-256-bit-secret-key-here-must-be-32-chars".getBytes(StandardCharsets.UTF_8)
   ); // Secure key for HS256
   // 🔹 Générer un token avec le rôle
-  public String generateToken(String username, String role) {
+  public String generateToken(String username, String role,Long userId) {
     return Jwts.builder()
       .setSubject(username)
       .claim("role", role) // Ajout du rôle dans le token
+            .claim("userId", userId)
       .setIssuedAt(new Date())
       .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // 10 heures
       .signWith(secretKey, SignatureAlgorithm.HS256)

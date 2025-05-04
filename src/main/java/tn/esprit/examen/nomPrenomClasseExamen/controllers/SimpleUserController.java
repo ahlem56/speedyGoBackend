@@ -1,11 +1,19 @@
 package tn.esprit.examen.nomPrenomClasseExamen.controllers;
 
-import lombok.AllArgsConstructor;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+import tn.esprit.examen.nomPrenomClasseExamen.entities.Commission;
+import tn.esprit.examen.nomPrenomClasseExamen.repositories.CommissionRepository;
+import tn.esprit.examen.nomPrenomClasseExamen.services.CommissionService;
 
-@AllArgsConstructor
-@RequestMapping("/simpleUser")
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+
 @RestController
+@RequestMapping("")
 public class SimpleUserController {
-}
+
+   }

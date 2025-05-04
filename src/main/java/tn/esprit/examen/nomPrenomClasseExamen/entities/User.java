@@ -15,13 +15,16 @@ import java.util.Date;
 @Entity
 @Getter
 @Setter
+@Table(name = "user")
 @NoArgsConstructor
 @AllArgsConstructor
+@DiscriminatorColumn(name = "user_type")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "chats", "notifications", "trips", "parcels"})
 @Inheritance (strategy  = InheritanceType.JOINED)
 public abstract class  User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "user_id")
     private Integer userId;
     @NotNull
     @JsonProperty("firstName")
@@ -46,8 +49,18 @@ public abstract class  User {
     private String resetToken;
     @JsonProperty("emergencyContactEmail")
     private String emergencyContactEmail;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "partner_id")
     private Partners partner;
+
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "userId=" + userId +
+                ", userFirstName='" + userFirstName + '\'' +
+                ", userLastName='" + userLastName + '\'' +
+                '}';
+    }
 
 }

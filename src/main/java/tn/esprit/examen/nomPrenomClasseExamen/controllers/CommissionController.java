@@ -1,52 +1,69 @@
 package tn.esprit.examen.nomPrenomClasseExamen.controllers;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import tn.esprit.examen.nomPrenomClasseExamen.entities.Commission;
-import tn.esprit.examen.nomPrenomClasseExamen.entities.User;
-import tn.esprit.examen.nomPrenomClasseExamen.entities.User;
-
-import tn.esprit.examen.nomPrenomClasseExamen.repositories.UserRepository;
-import tn.esprit.examen.nomPrenomClasseExamen.services.CommissionService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
-import tn.esprit.examen.nomPrenomClasseExamen.services.UserService;
-
-import java.security.Principal;
+import org.springframework.web.bind.annotation.*;
+import tn.esprit.examen.nomPrenomClasseExamen.entities.Commission;
+import tn.esprit.examen.nomPrenomClasseExamen.repositories.CommissionRepository;
+import tn.esprit.examen.nomPrenomClasseExamen.services.CommissionService;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-@RequiredArgsConstructor
+
 @RestController
 @RequestMapping("/commissions")
 public class CommissionController {
-    private final  CommissionService commissionService;
-    private final UserService userService;
-    private final UserRepository userRepository;
+    @Autowired
+    private CommissionRepository commissionRepository;
 
+    @Autowired
+    private CommissionService commissionService;
 
-    @GetMapping("/partner/{partnerId}")
-    public ResponseEntity<List<Commission>> getCommissionsByPartner(
-            @PathVariable Long partnerId
-    ) {
-        System.out.println("🔥 CALLED COMMISSION ENDPOINT!");
-        return ResponseEntity.ok(commissionService.getCommissionsForPartner(partnerId));
+    @GetMapping("/all")
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<tn.esprit.examen.nomPrenomClasseExamen.dto.CommissionDTO> getAllCommissions() {
+        return commissionService.getAllCommissions();
     }
 
-
-
+    @GetMapping("/partner/{partnerId}")
+    @PreAuthorize("hasRole('SIMPLE_USER') or hasRole('ADMIN')")
+    public List<tn.esprit.examen.nomPrenomClasseExamen.dto.CommissionDTO> getCommissionsByPartner(@PathVariable Integer partnerId) {
+        return commissionService.getCommissionsForPartner(partnerId);
+    }
 
     @GetMapping("/partner/{partnerId}/summary")
-    public ResponseEntity<Map<String, BigDecimal>> getCommissionSummary(
-            @PathVariable Long partnerId
-    ) {
-        return ResponseEntity.ok(
-                commissionService.getCommissionSummary(partnerId)
+    @PreAuthorize("hasRole('SIMPLE_USER') or hasRole('ADMIN')")
+    public Map<String, BigDecimal> getCommissionSummary(@PathVariable Integer partnerId) {
+        return commissionService.getCommissionSummary(partnerId);
+    }
+
+    @PostMapping("/create")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Commission createCommission(@RequestBody Commission commission) {
+        return commissionService.createCommission(
+                commission.getPartnerId(),
+                commission.getAmount(),
+                commission.getDescription()
         );
+    }
+
+    @GetMapping("/{commissionId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public tn.esprit.examen.nomPrenomClasseExamen.dto.CommissionDTO getCommissionDetails(@PathVariable Integer commissionId) {
+        Commission commission = commissionRepository.findById(commissionId)
+                .orElseThrow(() -> new IllegalArgumentException("Commission not found"));
+        return commissionService.toDTO(commission);
+    }
+
+    @PatchMapping("/{commissionId}/status")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Commission updateCommissionStatus(@PathVariable Integer commissionId, @RequestBody Map<String, Boolean> request) {
+        Commission commission = commissionRepository.findById(commissionId)
+                .orElseThrow(() -> new IllegalArgumentException("Commission not found"));
+        commission.setPaidOut(request.get("paidOut"));
+        commission.setUpdatedAt(LocalDateTime.now());
+        return commissionRepository.save(commission);
     }
 }
