@@ -56,7 +56,7 @@ public class Vehicle {
 
     @ElementCollection
     @CollectionTable(name = "vehicle_location_history", joinColumns = @JoinColumn(name = "vehicle_id"))
-    private List<LocationRecord> travelHistory = new ArrayList<>();
+    private List<LocationRecord> travelHistory ;
 
     @OneToOne(mappedBy = "vehicle", cascade = CascadeType.ALL)
     @JsonBackReference

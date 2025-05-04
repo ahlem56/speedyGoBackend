@@ -13,10 +13,8 @@ import tn.esprit.examen.nomPrenomClasseExamen.repositories.DriverRepository;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.TripRepository;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.VehicleRepository;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 @AllArgsConstructor
@@ -62,15 +60,7 @@ public class VehicleService implements IVehicleService {
         driverRepository.save(driver);
     }
 
-    /*@Override
-    public Vehicle updateLocation(Integer vehicleId, Double latitude, Double longitude) {
-        Vehicle vehicle = vehicleRepository.findById(vehicleId).get();
-        vehicle.setLatitude(latitude);
-        vehicle.setLongitude(longitude);
-        return vehicleRepository.save(vehicle);
-    }
 
-     */
     @Override
     public Vehicle updateLocation(Integer vehicleId, Double latitude, Double longitude) {
         Vehicle vehicle = vehicleRepository.findById(vehicleId)
@@ -81,7 +71,7 @@ public class VehicleService implements IVehicleService {
         Date now = new Date();
         vehicle.setUpdateTime(now);
 
-        vehicle.getTravelHistory().add(new LocationRecord(latitude, longitude, now));
+        vehicle.getTravelHistory().add(new LocationRecord(latitude, longitude, false));
 
         return vehicleRepository.save(vehicle);
     }
@@ -107,6 +97,62 @@ public class VehicleService implements IVehicleService {
 
         return tripInfo;
     }
+
+
+
+    public Vehicle addCheckpoints(Integer vehicleId, List<LocationRecord> checkpoints) {
+        Vehicle vehicle = vehicleRepository.findById(vehicleId)
+                .orElseThrow(() -> new RuntimeException("Véhicule introuvable"));
+
+        if (vehicle.getTravelHistory() == null) {
+            vehicle.setTravelHistory(new ArrayList<>());
+        }
+
+        vehicle.getTravelHistory().addAll(checkpoints);
+        vehicle.setUpdateTime(new Date());
+        return vehicleRepository.save(vehicle);
+    }
+
+    public Vehicle markNextCheckpointArrived(Integer vehicleId) {
+        Vehicle vehicle = vehicleRepository.findById(vehicleId).orElse(null);
+        if (vehicle == null) {
+            throw new RuntimeException("Vehicle not found with ID: " + vehicleId);
+        }
+        List<LocationRecord> history = vehicle.getTravelHistory();
+        if (history != null) {
+            AtomicBoolean updated = new AtomicBoolean(false);
+            history.forEach(rec -> {
+                if (!updated.get() && !rec.isArrived()) {
+                    rec.setArrived(true);
+                    //rec.setUpdateTime(new Date());
+                    updated.set(true);
+                }
+            });
+        }
+
+        vehicle.setUpdateTime(new Date());
+        return vehicleRepository.save(vehicle);
+    }
+
+
+    public List<Map<String, Object>> getCheckpointsStatus(Integer vehicleId) {
+        Vehicle vehicle = vehicleRepository.findById(vehicleId)
+                .orElseThrow(() -> new RuntimeException("Vehicle not found with ID: " + vehicleId));
+
+        List<LocationRecord> history = vehicle.getTravelHistory();
+        List<Map<String, Object>> checkpointsStatus = new ArrayList<>();
+
+        history.forEach(record -> {
+            Map<String, Object> checkpoint = new HashMap<>();
+            checkpoint.put("latitude", record.getLatitude());
+            checkpoint.put("longitude", record.getLongitude());
+            checkpoint.put("arrived", record.isArrived());
+            checkpointsStatus.add(checkpoint);
+        });
+
+        return checkpointsStatus;
+    }
+
 
 
 }

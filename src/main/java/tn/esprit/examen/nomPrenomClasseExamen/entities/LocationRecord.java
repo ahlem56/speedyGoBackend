@@ -19,6 +19,5 @@ public class LocationRecord {
     private Double latitude;
     private Double longitude;
 
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date updateTime;
+    public boolean arrived;
 }
