@@ -84,5 +84,22 @@ public class VehicleController {
                 .toList();
     }
 
+    @PostMapping("/saveCheckpoints/{vehicleId}")
+    public Vehicle saveCheckpoints(
+            @PathVariable Integer vehicleId,
+            @RequestBody List<LocationRecord> checkpoints
+    ) {
+        return vehicleService.addCheckpoints(vehicleId, checkpoints);
+    }
+
+    @PutMapping("/markNextArrived/{vehicleId}")
+    public Vehicle markNextArrived(@PathVariable Integer vehicleId) {
+        return vehicleService.markNextCheckpointArrived(vehicleId);
+    }
+
+    @GetMapping("/checkpointsStatus/{vehicleId}")
+    public List<Map<String, Object>> getCheckpointsStatus(@PathVariable Integer vehicleId) {
+        return vehicleService.getCheckpointsStatus(vehicleId);
+    }
 
 }
