@@ -1,8 +1,11 @@
 package tn.esprit.examen.nomPrenomClasseExamen.entities;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class SentimentResponse {
     private String sentiment;
-    private double predicted_score;
+
+    @JsonProperty("predicted_score")
+    private double predictedScore;
 
     public String getSentiment() {
         return sentiment;
@@ -12,11 +15,11 @@ public class SentimentResponse {
         this.sentiment = sentiment;
     }
 
-    public double getPredicted_score() {
-        return predicted_score;
+    public double getPredictedScore() {
+        return predictedScore;
     }
 
-    public void setPredicted_score(double predicted_score) {
-        this.predicted_score = predicted_score;
+    public void setPredictedScore(double predictedScore) {
+        this.predictedScore = predictedScore;
     }
 }

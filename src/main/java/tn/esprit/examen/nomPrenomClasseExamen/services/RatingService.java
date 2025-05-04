@@ -54,14 +54,14 @@ public class RatingService {
         if (rating.getComment() != null && !rating.getComment().isEmpty()) {
             SentimentResponse sentimentResponse = sentimentAnalysisService.analyzeSentiment(rating.getComment());
             String sentiment = sentimentResponse.getSentiment();
-            Double sentimentScore = sentimentResponse.getPredicted_score();  // This score comes from the Flask API response
+            Double sentimentScore = sentimentResponse.getPredictedScore();  // This score comes from the Flask API response
 
             // Store sentiment and sentiment score
             rating.setSentiment(sentiment);
             rating.setSentimentScore(sentimentScore);
 
             // **Directly use the score from Flask API response** for the rating score
-            int finalScore = (int) Math.round(sentimentResponse.getPredicted_score());  // No recalculation, just use Flask's score
+            int finalScore = (int) Math.round(sentimentResponse.getPredictedScore());  // No recalculation, just use Flask's score
             finalScore = Math.max(1, Math.min(finalScore, 5));  // Ensure the score is between 1 and 5
 
             // Set the final score based on the value returned from the Flask API

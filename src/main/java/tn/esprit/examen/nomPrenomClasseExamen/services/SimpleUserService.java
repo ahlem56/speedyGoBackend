@@ -80,6 +80,21 @@ public class SimpleUserService implements ISimpleUserService {
 
         return discount;
     }
+    @Override
+    public List<SimpleUser> getAllSimpleUsers() {
+        return simpleUserRepository.findAll();
+    }
+
+    @Override
+    public SimpleUser getSimpleUserById(Integer id) {
+        return simpleUserRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("SimpleUser not found"));
+    }
+
+    @Override
+    public void deleteSimpleUser(Integer id) {
+        simpleUserRepository.deleteById(id);
+    }
 
 
 }

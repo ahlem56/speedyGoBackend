@@ -11,7 +11,6 @@ import tn.esprit.examen.nomPrenomClasseExamen.services.RatingService;
 import java.util.List;
 import java.util.Map;
 
-@CrossOrigin(origins = "*") // Allow CORS from any origin (adjust later for security)
 @AllArgsConstructor
 @RequestMapping("/ratings")
 @RestController

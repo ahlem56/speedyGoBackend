@@ -16,11 +16,11 @@ public class SentimentAnalysisService {
         RestTemplate restTemplate = new RestTemplate();
         SentimentRequest request = new SentimentRequest(comment);
         SentimentResponse response = restTemplate.postForObject(sentimentAnalysisApiUrl, request, SentimentResponse.class);
-        log.info("score : "+ response.getPredicted_score());
+        log.info("score : "+ response.getPredictedScore());
         // Check if sentiment score is in a valid range and return response
-        if (response.getPredicted_score() < 1 || response.getPredicted_score() > 5) {
+        if (response.getPredictedScore() < 1 || response.getPredictedScore() > 5){
             // Default to neutral if the score is out of bounds
-            response.setPredicted_score(3);
+            response.setPredictedScore(3);
 
         }
 
