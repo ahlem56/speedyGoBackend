@@ -6,7 +6,6 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import tn.esprit.examen.nomPrenomClasseExamen.exceptions.ErrorResponse;
 
 import java.util.stream.Collectors;
 

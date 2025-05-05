@@ -62,7 +62,7 @@ public class Trip {
     private Boolean isRated = false; // Default value is false
 
     @Column(name = "reminder_sent")
-    private boolean reminderSent = false; // Default is false
+    private Boolean reminderSent = false; // Default is false
 
 
 

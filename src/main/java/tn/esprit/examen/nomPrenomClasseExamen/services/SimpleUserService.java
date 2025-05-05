@@ -3,8 +3,10 @@ package tn.esprit.examen.nomPrenomClasseExamen.services;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import tn.esprit.examen.nomPrenomClasseExamen.entities.Partners;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.SimpleUser;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.Subscription;
+import tn.esprit.examen.nomPrenomClasseExamen.repositories.PartnersRepository;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.SimpleUserRepository;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.SubscriptionRepository;
 
@@ -20,6 +22,7 @@ import java.util.Optional;
 public class SimpleUserService implements ISimpleUserService {
     private SimpleUserRepository simpleUserRepository;
     private SubscriptionRepository subscriptionRepository;
+    private PartnersRepository partnersRepository;
 
 
     public Optional<SimpleUser> getUserById(Integer userId) {
@@ -79,6 +82,19 @@ public class SimpleUserService implements ISimpleUserService {
         }
 
         return discount;
+    }
+    public List<SimpleUser> getAllUsers() {
+        return simpleUserRepository.findAll();
+    }
+
+    public void assignPartner(Integer userId, Integer partnerId) {
+        SimpleUser user = simpleUserRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+        Partners partner = partnersRepository.findById(partnerId)
+                .orElseThrow(() -> new RuntimeException("Partner not found with ID: " + partnerId));
+        user.setPartners(partner);
+        simpleUserRepository.save(user);
+        log.info("Assigned partner ID {} to user ID {}", partnerId, userId);
     }
 
 

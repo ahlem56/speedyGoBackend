@@ -7,7 +7,9 @@ import com.stripe.model.PaymentIntent;
 import com.stripe.param.ChargeCreateParams;
 import com.stripe.param.PaymentIntentCreateParams;
 import jakarta.annotation.PostConstruct;
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.Hibernate;
 import org.springframework.stereotype.Service;
 import tn.esprit.examen.nomPrenomClasseExamen.dto.PaymentRequestDTO;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.*;
@@ -167,9 +169,9 @@ public class PaymentService implements IPaymentService {
         return intent.getClientSecret();
     }
 
-    @Override
+    @Transactional
     public Payment processPayment(PaymentRequestDTO request) {
-        log.info("Processing payment: {}", request);
+        log.info("Processing payment: {}, partnerId: {}", request, request.getPartnerId());
 
         if (request.getPaymentAmount() == null || request.getPaymentAmount().compareTo(BigDecimal.ZERO) <= 0) {
             log.error("Invalid payment amount");
@@ -182,10 +184,6 @@ public class PaymentService implements IPaymentService {
         if (request.getStripePaymentMethodId() == null && request.getPaymentMethod() == PaymentMethod.STRIPE) {
             log.error("Stripe payment method ID is missing");
             throw new IllegalArgumentException("Stripe payment method ID is required");
-        }
-        if (request.getTripId() == null && request.getParcelId() == null) {
-            log.error("Both Trip ID and Parcel ID are missing");
-            throw new IllegalArgumentException("Either Trip ID or Parcel ID is required");
         }
 
         Payment existingPayment = null;
@@ -216,20 +214,26 @@ public class PaymentService implements IPaymentService {
         }
 
         SimpleUser user = null;
-        Partners partner = null;
         if (request.getUserId() != null) {
             user = simpleUserRepository.findById(request.getUserId())
                     .orElseThrow(() -> new RuntimeException("User not found with ID: " + request.getUserId()));
-            partner = user.getPartners();
+            Hibernate.initialize(user.getPartners());
+            log.info("User partners: {}", user.getPartners() != null ? user.getPartners().getPartnerId() : "null");
         }
 
+        Partners partner = null;
         if (request.getPartnerId() != null) {
-            Partners providedPartner = partnersRepository.findById(request.getPartnerId())
+            partner = partnersRepository.findById(request.getPartnerId())
                     .orElseThrow(() -> new RuntimeException("Partner not found with ID: " + request.getPartnerId()));
-            if (user != null && user.getPartners() != null && !user.getPartners().getPartnerId().equals(request.getPartnerId())) {
-                throw new IllegalArgumentException("Partner ID does not match user's partner association");
-            }
-            partner = providedPartner;
+            log.info("Partner ID {} assigned to payment for user ID: {}", request.getPartnerId(), request.getUserId());
+        } else if (user != null && user.getPartners() != null) {
+            partner = user.getPartners();
+            log.info("Using user's partner ID {} for payment for user ID: {}", partner.getPartnerId(), request.getUserId());
+        } else {
+            log.warn("No partner assigned for payment for user ID: {}. Assigning default partner", request.getUserId());
+            partner = partnersRepository.findById(1)
+                    .orElseThrow(() -> new RuntimeException("Default partner not found"));
+            log.info("Assigned default partner ID 1 for user ID: {}", request.getUserId());
         }
 
         Payment payment = new Payment();
@@ -246,14 +250,16 @@ public class PaymentService implements IPaymentService {
 
         try {
             Payment savedPayment = paymentRepository.save(payment);
-            log.info("Payment saved with ID: {}", savedPayment.getPaymentId());
+            log.info("Payment saved with ID: {}, partner_id: {}, partner in object: {}",
+                    savedPayment.getPaymentId(),
+                    partner != null ? partner.getPartnerId() : "NULL",
+                    savedPayment.getPartner() != null ? savedPayment.getPartner().getPartnerId() : "NULL");
             return savedPayment;
         } catch (Exception e) {
             log.error("Failed to save payment: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to save payment: " + e.getMessage(), e);
         }
     }
-
     @Override
     public List<Payment> getUserPaymentHistory(Integer userId) {
         log.info("Fetching payment history for user ID: {}", userId);

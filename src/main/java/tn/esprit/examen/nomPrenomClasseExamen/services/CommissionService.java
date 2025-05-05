@@ -65,7 +65,10 @@ public class CommissionService {
 
         for (Payment payment : payments) {
             try {
-                log.info("Processing payment ID: {}", payment.getPaymentId());
+                log.info("Processing payment ID: {}, partner_id: {}, amount: {}",
+                        payment.getPaymentId(),
+                        payment.getPartner() != null ? payment.getPartner().getPartnerId() : null,
+                        payment.getPaymentAmount());
 
                 Partners partner = payment.getPartner();
                 if (partner == null) {
@@ -92,10 +95,12 @@ public class CommissionService {
                 Commission commission = new Commission();
                 commission.setPartner(partner);
                 commission.setPayment(payment);
+                commission.setPartnerId(partner.getPartnerId());
+                commission.setPaymentId(payment.getPaymentId());
 
                 BigDecimal commissionRate = partner.getCommissionRate();
                 BigDecimal commissionAmount = payment.getPaymentAmount()
-                        .multiply(commissionRate.divide(BigDecimal.valueOf(100)))
+                        .multiply(commissionRate)
                         .setScale(2, RoundingMode.HALF_UP);
 
                 commission.setAmount(commissionAmount);
@@ -113,7 +118,7 @@ public class CommissionService {
 
                 payment.setCommissionCalculated(true);
                 paymentRepository.save(payment);
-                log.info("Commission created for payment {}", payment.getPaymentId());
+                log.info("Commission created for payment {}, amount: {}", payment.getPaymentId(), commissionAmount);
             } catch (Exception e) {
                 log.error("Error processing payment {}: {}", payment.getPaymentId(), e.getMessage());
             }
@@ -148,8 +153,6 @@ public class CommissionService {
                 "paid", paid
         );
     }
-    //ghalta mink
-    //hjkfkdjjhdf
 
     public tn.esprit.examen.nomPrenomClasseExamen.dto.CommissionDTO toDTO(Commission commission) {
         tn.esprit.examen.nomPrenomClasseExamen.dto.CommissionDTO dto = new tn.esprit.examen.nomPrenomClasseExamen.dto.CommissionDTO();
