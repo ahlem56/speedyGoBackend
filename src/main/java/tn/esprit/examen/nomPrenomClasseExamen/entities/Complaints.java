@@ -22,7 +22,7 @@ public class Complaints {
     @Enumerated(EnumType.STRING)
     private ComplaintStatus complaintStatus = ComplaintStatus.pending;
     private String Response;
-
+    private String severity; // New field for predicted severity
     @ManyToOne
     @JsonIgnore
     @JoinColumn(name = "simple_user_user_id")

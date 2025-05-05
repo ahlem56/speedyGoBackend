@@ -6,10 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import tn.esprit.examen.nomPrenomClasseExamen.entities.ComplaintStatus;
-import tn.esprit.examen.nomPrenomClasseExamen.entities.Complaints;
-import tn.esprit.examen.nomPrenomClasseExamen.entities.Admin;
-import tn.esprit.examen.nomPrenomClasseExamen.entities.SimpleUser;
+import tn.esprit.examen.nomPrenomClasseExamen.entities.*;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.AdminRepository;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.ComplaintsRepository;
 import tn.esprit.examen.nomPrenomClasseExamen.repositories.SimpleUserRepository;
@@ -29,11 +26,15 @@ public class ComplaintsService implements IComplaintsService {
     private final ComplaintsRepository complaintsRepository;
     private final SimpleUserRepository simpleUserRepository;
     private final AdminRepository adminRepository;
-
+    private final SeverityAnalysisService severityAnalysisService; // Inject new service
     @Override
     public Complaints createComplaint(Complaints complaint, Integer simpleUserId) {
         SimpleUser simpleUser = simpleUserRepository.findById(simpleUserId)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+
+        SeverityResponse severityResponse = severityAnalysisService.analyzeSeverity(complaint.getComplaintDescription());
+        complaint.setSeverity(severityResponse.getPredictedSeverity());
+
         complaint.setSimpleUser(simpleUser);
         complaint.setComplaintCreationDate(new Date());
         complaint.setComplaintStatus(ComplaintStatus.pending);
@@ -50,6 +51,11 @@ public class ComplaintsService implements IComplaintsService {
 
             Complaints complaint = existingComplaint.get();
             complaint.setComplaintDescription(updatedComplaint.getComplaintDescription());
+
+            SeverityResponse severityResponse = severityAnalysisService.analyzeSeverity(updatedComplaint.getComplaintDescription());
+            complaint.setSeverity(severityResponse.getPredictedSeverity());
+            log.info("Updated severity for complaint ID {}: {}", id, severityResponse.getPredictedSeverity());
+
             return complaintsRepository.save(complaint);
         }
 
@@ -105,7 +111,7 @@ public class ComplaintsService implements IComplaintsService {
 
     @Override
     public List<Complaints> getAllComplaints() {
-        return complaintsRepository.findAllWithUsers();
+        return complaintsRepository.findAllWithUsersSortedBySeverity();
     }
 
     @Override

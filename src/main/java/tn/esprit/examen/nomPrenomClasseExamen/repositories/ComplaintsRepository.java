@@ -26,4 +26,12 @@ public interface ComplaintsRepository extends JpaRepository<Complaints, Integer>
 
     // Méthode pour déboguer toutes les réclamations pending
     List<Complaints> findByComplaintStatus(@Param("status") ComplaintStatus status);
+
+    @Query("SELECT c FROM Complaints c JOIN FETCH c.simpleUser ORDER BY " +
+            "CASE c.severity " +
+            "WHEN 'high' THEN 1 " +
+            "WHEN 'medium' THEN 2 " +
+            "WHEN 'low' THEN 3 " +
+            "ELSE 4 END")
+    List<Complaints> findAllWithUsersSortedBySeverity();
 }

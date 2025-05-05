@@ -471,6 +471,7 @@ public class CarpoolService implements ICarpoolService {
                     offerer.put("lastName", user.getUserLastName());
                     offerer.put("name", user.getUserFirstName() + " " + user.getUserLastName()); // Concatenated name
                     offerer.put("averageRating", user.getAverageRating());
+                    offerer.put("profilePhoto", user.getUserProfilePhoto() != null ? user.getUserProfilePhoto() : "default.jpg");
                     return offerer;
                 })
                 .collect(Collectors.toList());
