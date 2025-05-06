@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import tn.esprit.examen.nomPrenomClasseExamen.dto.AssignPartnerRequest;
 import tn.esprit.examen.nomPrenomClasseExamen.entities.SimpleUser;
 import tn.esprit.examen.nomPrenomClasseExamen.services.SimpleUserService;
 
@@ -31,26 +32,5 @@ public class SimpleUserController {
       simpleUserService.assignPartner(request.getUserId(), request.getPartnerId());
       log.info("Partner assigned successfully");
       return new ResponseEntity<>(HttpStatus.OK);
-   }
-}
-
-class AssignPartnerRequest {
-   private Integer userId;
-   private Integer partnerId;
-
-   public Integer getUserId() {
-      return userId;
-   }
-
-   public void setUserId(Integer userId) {
-      this.userId = userId;
-   }
-
-   public Integer getPartnerId() {
-      return partnerId;
-   }
-
-   public void setPartnerId(Integer partnerId) {
-      this.partnerId = partnerId;
    }
 }

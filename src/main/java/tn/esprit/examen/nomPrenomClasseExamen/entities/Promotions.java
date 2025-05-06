@@ -1,5 +1,7 @@
 package tn.esprit.examen.nomPrenomClasseExamen.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -26,7 +28,9 @@ public class Promotions {
     private Date promotionEndDate;
 
     @OneToMany(mappedBy = "promotions", orphanRemoval = true)
+    @JsonIgnoreProperties("promotions") // Ignore the promotions field in Partners to break the cycle
     private Set<Partners> partnerses = new LinkedHashSet<>();
-
 }
+
+
 
