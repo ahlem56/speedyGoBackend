@@ -40,17 +40,15 @@ public class Payment {
     @JoinColumn(name = "parcel_id")
     private Parcel parcel;
 
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "trip_id")
     private Trip trip;
 
     @ManyToOne
-    @JoinColumn(name = "partnerId", insertable = false, updatable = false)
+    @JoinColumn(name = "partner_id")
     private Partners partner;
 
     @ManyToOne(fetch = FetchType.LAZY)
-
     @JoinColumn(name = "user_id")
     private SimpleUser user;
 

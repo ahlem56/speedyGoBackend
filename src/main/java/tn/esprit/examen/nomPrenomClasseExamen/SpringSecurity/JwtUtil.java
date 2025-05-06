@@ -23,7 +23,7 @@ public class JwtUtil {
       .claim("role", role) // Ajout du rôle dans le token
             .claim("userId", userId)
       .setIssuedAt(new Date())
-      .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // 10 heures
+            .setExpiration(new Date(System.currentTimeMillis() + 1000L * 60 * 60 * 24 * 7)) // 7 days
       .signWith(secretKey, SignatureAlgorithm.HS256)
       .compact();
   }
