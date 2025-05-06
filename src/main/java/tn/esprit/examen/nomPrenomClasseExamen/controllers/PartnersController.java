@@ -24,13 +24,14 @@ public class PartnersController {
 
     @PostMapping("/create")
     public ResponseEntity<?> createPartner(@RequestBody Partners partner) {
-        log.info("Creating partner: {}", partner);
+        log.info("Creating new partner: {}", partner);
         try {
             Partners createdPartner = partnersService.createPartner(partner);
             return ResponseEntity.ok(createdPartner);
         } catch (Exception e) {
             log.error("Error creating partner: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("Failed to create partner: " + e.getMessage()));
         }
     }
 
@@ -126,6 +127,59 @@ public class PartnersController {
         } catch (Exception e) {
             log.error("Error fetching daily revenue: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("Failed to fetch daily revenue: " + e.getMessage()));
+        }
+    }
+    @PostMapping("/{partnerId}/check-promotion")
+    public ResponseEntity<?> checkPartnerPromotion(@PathVariable Integer partnerId) {
+        log.info("Checking promotion for partner ID: {}", partnerId);
+        try {
+            Partners updatedPartner = partnersService.checkAndPromotePartner(partnerId);
+            String promotionTier = updatedPartner.getPromotions() != null ? updatedPartner.getPromotions().getPromotionTitle() : "No Promotion";
+            return ResponseEntity.ok(Map.of(
+                    "message", "Promotion checked",
+                    "partner", updatedPartner,
+                    "newCommissionRate", updatedPartner.getCommissionRate(),
+                    "promotionTier", promotionTier
+            ));
+        } catch (RuntimeException e) {
+            log.error("Error checking promotion for partner ID: {}: {}", partnerId, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(e.getMessage()));
+        } catch (Exception e) {
+            log.error("Unexpected error checking promotion for partner ID: {}: {}", partnerId, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("An unexpected error occurred: " + e.getMessage()));
+        }
+    }
+    @GetMapping("/with-promotions")
+    public ResponseEntity<?> getPartnersWithPromotions() {
+        log.info("Fetching all partners with promotions");
+        try {
+            List<Partners> partners = partnersService.getAllPartners();
+            List<Partners> partnersWithPromotions = partners.stream()
+                    .filter(p -> p.getPromotions() != null)
+                    .toList();
+            log.info("Found {} partners with promotions", partnersWithPromotions.size());
+            return ResponseEntity.ok(partnersWithPromotions);
+        } catch (Exception e) {
+            log.error("Error fetching partners with promotions: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("Failed to fetch partners with promotions: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/{partnerId}/promote")
+    public ResponseEntity<?> promotePartner(@PathVariable Integer partnerId) {
+        log.info("Manually promoting partner with ID: {}", partnerId);
+        try {
+            Partners updatedPartner = partnersService.checkAndPromotePartner(partnerId);
+            if (updatedPartner == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new ErrorResponse("Partner with ID " + partnerId + " not found"));
+            }
+            return ResponseEntity.ok(updatedPartner);
+        } catch (Exception e) {
+            log.error("Error promoting partner with ID {}: {}", partnerId, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("Failed to promote partner: " + e.getMessage()));
         }
     }
 }

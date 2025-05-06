@@ -1,5 +1,6 @@
 package tn.esprit.examen.nomPrenomClasseExamen.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
@@ -42,12 +43,14 @@ public class Parcel {
 
     @ManyToOne
     @JoinColumn(name = "simple_user_user_id")
+    @JsonBackReference(value = "simpleUser-parcels")
     private SimpleUser simpleUser;
 
     @ManyToOne
     @JoinColumn(name = "driver_user_id")
     private Driver driver;
     @OneToOne (mappedBy = "parcel")
+    @JsonBackReference(value = "parcel-payment")
     private Payment payment;
 
     @Enumerated(EnumType.STRING)

@@ -2,6 +2,7 @@ package tn.esprit.examen.nomPrenomClasseExamen.entities;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -81,6 +82,7 @@ public class SimpleUser extends User{
     private Set<Complaints> complaints = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "simpleUser", orphanRemoval = true)
+    @JsonManagedReference(value = "simpleUser-parcels")
     private Set<Parcel> parcels = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "simpleUser", orphanRemoval = true)

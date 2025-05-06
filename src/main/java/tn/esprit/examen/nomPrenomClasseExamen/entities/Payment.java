@@ -1,6 +1,8 @@
 package tn.esprit.examen.nomPrenomClasseExamen.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -38,6 +40,7 @@ public class Payment {
 
     @OneToOne
     @JoinColumn(name = "parcel_id")
+    @JsonManagedReference(value = "parcel-payment")
     private Parcel parcel;
 
     @ManyToOne(fetch = FetchType.LAZY)

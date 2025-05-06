@@ -1,5 +1,6 @@
 package tn.esprit.examen.nomPrenomClasseExamen.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
@@ -32,9 +33,9 @@ public class Partners {
     @JsonIgnore
     private Set<SimpleUser> simpleUsers = new LinkedHashSet<>();
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "promotions_promotion_id")
-    @JsonIgnoreProperties("partners")
+    @JsonIgnoreProperties("partnerses") // Ignore the partnerses field in Promotions to break the cycle
     private Promotions promotions;
     @Column(precision = 10, scale = 2)
     private BigDecimal commissionRate = BigDecimal.valueOf(0.15); // 15% default
@@ -44,4 +45,3 @@ public class Partners {
 
 
 }
-
